@@ -11,8 +11,6 @@ require_once __DIR__ . '/../config.php';
 header('Content-Type: application/json');
 
 $filePath = $_GET['path'] ?? '';
-$offset = (int)($_GET['offset'] ?? 0);
-$length = (int)($_GET['length'] ?? 4096);
 
 // Security: Basic check for directory traversal.
 if (strpos($filePath, '..') !== false) {
@@ -42,20 +40,10 @@ if (file_exists($fullPath) && is_file($fullPath)) {
         error_log("Database error in log_preview.php: " . $e->getMessage());
     }
 
-    $handle = fopen($fullPath, 'rb');
-    if ($handle) {
-        fseek($handle, $offset);
-        $content = fread($handle, $length);
-        $current_pos = ftell($handle);
-        fclose($handle);
-
-        $file_size = filesize($fullPath);
-        $has_more = $current_pos < $file_size;
-
+    $content = file_get_contents($fullPath);
+    if ($content !== false) {
         $response = [
             'content' => $content,
-            'next_offset' => $current_pos,
-            'has_more' => $has_more,
         ];
 
         if ($fileInfo) {
@@ -68,7 +56,7 @@ if (file_exists($fullPath) && is_file($fullPath)) {
 
         echo json_encode($response);
     } else {
-        echo json_encode(['error' => 'Could not open file']);
+        echo json_encode(['error' => 'Could not read file']);
     }
 } else {
     echo json_encode(['error' => 'File not found']);

@@ -119,14 +119,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Helper function to show "Copied!" feedback
+    function showCopyFeedback(button) {
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+            button.textContent = originalText;
+        }, 2000);
+    }
+
     copyBtn.addEventListener('click', () => {
         const textToCopy = originalLogContent;
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(textToCopy).then(() => {
-                alert('Log content copied to clipboard!');
+                showCopyFeedback(copyBtn);
             }).catch(err => {
                 console.error('Failed to copy text: ', err);
-                alert('Failed to copy text.');
+                alert('Failed to copy text automatically. Please try again or copy manually.');
                 fallbackCopyText(textToCopy);
             });
         } else {
@@ -137,20 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function fallbackCopyText(text) {
         const textArea = document.createElement('textarea');
         textArea.value = text;
-        textArea.style.position = 'fixed'; // Avoid scrolling to bottom
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
         try {
             const successful = document.execCommand('copy');
             if (successful) {
-                alert('Log content copied (fallback method)!');
+                showCopyFeedback(copyBtn);
             } else {
-                alert('Fallback copy was unsuccessful.');
+                prompt('Failed to copy automatically. Please copy the text below manually:', text);
             }
         } catch (err) {
             console.error('Fallback copy error:', err);
-            alert('Fallback copy was unsuccessful.');
+            prompt('Failed to copy automatically. Please copy the text below manually:', text);
         }
         document.body.removeChild(textArea);
     }
@@ -176,6 +187,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const nextRow = currentLogSiblings[currentLogIndex];
             const logPath = nextRow.querySelector('.btn-preview').dataset.path;
             showLogPreview(logPath);
+        }
+    });
+
+    // Add keyboard navigation for prev/next
+    document.addEventListener('keydown', (e) => {
+        if (logPreviewModal.style.display === 'block') { // Only active when modal is open
+            if (e.key === 'ArrowLeft') {
+                prevBtn.click();
+            } else if (e.key === 'ArrowRight') {
+                nextBtn.click();
+            }
         }
     });
 
