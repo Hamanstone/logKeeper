@@ -137,6 +137,31 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         markdownView.innerHTML = marked.parse(originalLogContent || '');
+        attachMarkdownCopyButtons();
+    }
+
+    function attachMarkdownCopyButtons() {
+        if (!markdownView) return;
+        const existingButtons = markdownView.querySelectorAll('.markdown-copy-btn');
+        Array.from(existingButtons).forEach(btn => btn.remove());
+
+        const blocks = markdownView.querySelectorAll('pre');
+        Array.from(blocks).forEach(pre => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'markdown-copy-btn';
+            btn.textContent = 'Copy';
+            btn.addEventListener('click', () => {
+                const codeEl = pre.querySelector('code');
+                const text = codeEl ? codeEl.textContent : pre.textContent;
+                copyTextToClipboard(text, btn);
+            });
+            const wrapper = document.createElement('div');
+            wrapper.className = 'markdown-code-wrapper';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+            wrapper.appendChild(btn);
+        });
     }
 
     // 3. Modal Buttons and Actions
@@ -202,22 +227,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     }
 
-    copyBtn.addEventListener('click', () => {
-        const textToCopy = originalLogContent;
+    function copyTextToClipboard(text, targetButton) {
+        if (!text) return;
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                showCopyFeedback(copyBtn);
+            navigator.clipboard.writeText(text).then(() => {
+                if (targetButton) {
+                    showCopyFeedback(targetButton);
+                }
             }).catch(err => {
                 console.error('Failed to copy text: ', err);
                 alert('Failed to copy text automatically. Please try again or copy manually.');
-                fallbackCopyText(textToCopy);
+                fallbackCopyText(text, targetButton);
             });
         } else {
-            fallbackCopyText(textToCopy);
+            fallbackCopyText(text, targetButton);
         }
+    }
+
+    copyBtn.addEventListener('click', () => {
+        copyTextToClipboard(originalLogContent, copyBtn);
     });
 
-    function fallbackCopyText(text) {
+    function fallbackCopyText(text, targetButton) {
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
@@ -228,8 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
         textArea.select();
         try {
             const successful = document.execCommand('copy');
-            if (successful) {
-                showCopyFeedback(copyBtn);
+            if (successful && targetButton) {
+                showCopyFeedback(targetButton);
             } else {
                 prompt('Failed to copy automatically. Please copy the text below manually:', text);
             }

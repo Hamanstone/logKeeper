@@ -259,12 +259,54 @@ h1, h2 {
     padding: 0.2em 0.4em;
     border-radius: 4px;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    color: #0f172a;
+    text-shadow: none;
+}
+
+#markdown-view pre {
+    background: transparent;
+    border-radius: 6px;
+    margin: 0;
+    text-shadow: none;
+    position: relative;
+    padding: 1.2em;
+    overflow: auto;
+}
+
+.markdown-code-wrapper {
+    position: relative;
+    margin: 0 0 1.25em;
+    border-radius: 6px;
+    background: #f1f5f9;
+    padding: 0.8em 1.2em 1.2em;
 }
 
 #markdown-view pre code {
     display: block;
-    padding: 1em;
+    padding: 0;
     overflow-x: auto;
+    white-space: pre-wrap;
+    color: #0f172a;
+    text-shadow: none;
+}
+
+.markdown-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: 1px solid #94a3b8;
+    background: rgba(255,255,255,0.9);
+    color: #0f172a;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    z-index: 2;
+}
+
+.markdown-copy-btn:hover {
+    background: #e2e8f0;
 }
 
 .modal-footer {
@@ -411,8 +453,37 @@ mark {
     color: #f8fafc;
 }
 
+.dark-mode #markdown-view pre {
+    background: transparent;
+    color: #e2e8f0;
+    text-shadow: none;
+}
+
 .dark-mode #markdown-view code {
+    background: transparent;
+    color: #e2e8f0;
+    text-shadow: none;
+}
+
+.dark-mode .markdown-code-wrapper {
     background: #1f2937;
+    padding: 0.8em 1.2em 1.2em;
+}
+
+.dark-mode #markdown-view pre code {
+    color: #f8fafc;
+    text-shadow: none;
+    padding: 0;
+}
+
+.dark-mode .markdown-copy-btn {
+    border-color: #475569;
+    background: rgba(15,23,42,0.8);
+    color: #e2e8f0;
+}
+
+.dark-mode .markdown-copy-btn:hover {
+    background: rgba(15,23,42,0.95);
 }
 
 .dark-mode #log-content .line-number {
