@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const logFilenameEl = document.getElementById('log-filename');
     const logDetailsEl = document.getElementById('log-details');
     const themeToggleBtn = document.getElementById('toggle-theme');
+    const viewMarkdownBtn = document.getElementById('view-markdown');
+    const markdownView = document.getElementById('markdown-view');
     const copyBtn = document.getElementById('copy-log');
     const downloadBtn = document.getElementById('download-log');
     const prevBtn = document.getElementById('prev-log');
@@ -19,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isDarkMode = false;
     let currentLogSiblings = [];
     let currentLogIndex = -1;
+    let isMarkdownFile = false;
+    let markdownVisible = false;
 
     // 1. Show Log Preview Modal
     function showLogPreview(logPath) {
@@ -34,13 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 originalLogContent = data.content;
                 logFilenameEl.textContent = data.file_info.name;
                 logDetailsEl.textContent = `Size: ${data.file_info.size} | Modified: ${data.file_info.modified}`;
+                isMarkdownFile = /\.(md|markdown)$/i.test(data.file_info.name || '');
 
                 // Reset state before showing new content
                 lineNumbersVisible = false;
                 toggleLineNumbersBtn.textContent = 'Show Line Numbers';
                 searchInput.value = '';
+                markdownVisible = false;
+                if (markdownView) {
+                    markdownView.style.display = 'none';
+                    markdownView.innerHTML = '';
+                }
+                logContentEl.style.display = 'block';
 
                 updateLogView(); // Use the new unified render function
+                updateMarkdownControls();
 
                 logPreviewModal.style.display = 'block';
                 updatePrevNextButtons();
@@ -105,6 +117,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function updateMarkdownControls() {
+        if (!viewMarkdownBtn || !markdownView) return;
+        if (isMarkdownFile) {
+            viewMarkdownBtn.style.display = 'inline-block';
+            viewMarkdownBtn.textContent = markdownVisible ? 'View Raw' : 'View Markdown';
+        } else {
+            viewMarkdownBtn.style.display = 'none';
+            markdownVisible = false;
+            markdownView.style.display = 'none';
+            logContentEl.style.display = 'block';
+        }
+    }
+
+    function renderMarkdownView() {
+        if (!markdownView) return;
+        if (typeof marked === 'undefined') {
+            markdownView.innerHTML = '<p>Markdown renderer not available.</p>';
+            return;
+        }
+        markdownView.innerHTML = marked.parse(originalLogContent || '');
+    }
+
     // 3. Modal Buttons and Actions
     function applyThemePreference() {
         if (!themeToggleBtn) return;
@@ -124,6 +158,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         applyThemePreference();
+    }
+
+    if (viewMarkdownBtn && markdownView) {
+        viewMarkdownBtn.addEventListener('click', () => {
+            if (!isMarkdownFile) return;
+            markdownVisible = !markdownVisible;
+            if (markdownVisible) {
+                renderMarkdownView();
+                markdownView.style.display = 'block';
+                logContentEl.style.display = 'none';
+            } else {
+                markdownView.style.display = 'none';
+                logContentEl.style.display = 'block';
+                updateLogView();
+            }
+            updateMarkdownControls();
+        });
     }
 
     closeModal.addEventListener('click', () => {

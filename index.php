@@ -99,6 +99,7 @@ session_start();
             <div class="modal-body">
                 <div class="controls">
                     <button id="toggle-theme">Dark Mode</button>
+                    <button id="view-markdown" style="display:none;">View Markdown</button>
                     <button id="copy-log">Copy</button>
                     <button id="download-log">Download</button>
                     <button id="toggle-line-numbers">Show Line Numbers</button>
@@ -106,6 +107,7 @@ session_start();
                     <p id="log-details"></p>
                 </div>
                 <pre id="log-content"></pre>
+                <div id="markdown-view" class="markdown-view" style="display:none;"></div>
             </div>
             <div class="modal-footer">
                 <button id="prev-log" disabled>&laquo; Prev</button>
@@ -148,6 +150,7 @@ session_start();
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="js/scripts.js"></script>
 <script>
 $(document).ready(function() {

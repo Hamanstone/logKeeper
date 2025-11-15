@@ -186,15 +186,13 @@ h1, h2 {
 
 #toggle-theme {
     background-color: #0086a8;
+    border-color: #0086a8;
     color: #fff;
-    border: none;
-    padding: 8px 14px;
-    font-weight: 600;
-    box-shadow: inset 0 -2px rgba(0,0,0,0.12);
 }
 
 #toggle-theme:hover {
     background-color: #009ec6;
+    border-color: #009ec6;
 }
 
 #log-search-input {
@@ -222,6 +220,51 @@ h1, h2 {
     white-space: pre-wrap; /* Ensures long lines wrap */
     word-break: break-all;
     color: inherit;
+}
+
+#markdown-view {
+    display: none;
+    flex-grow: 1;
+    overflow-y: auto;
+    background: #fff;
+    color: #111827;
+    padding: 20px 30px;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+#markdown-view h1,
+#markdown-view h2,
+#markdown-view h3,
+#markdown-view h4,
+#markdown-view h5,
+#markdown-view h6 {
+    margin-top: 1.5em;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+#markdown-view p {
+    margin-bottom: 1em;
+}
+
+#markdown-view ul,
+#markdown-view ol {
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+#markdown-view code {
+    background: #f1f5f9;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+#markdown-view pre code {
+    display: block;
+    padding: 1em;
+    overflow-x: auto;
 }
 
 .modal-footer {
@@ -329,13 +372,14 @@ mark {
 }
 
 .dark-mode #toggle-theme {
-    background: #2563eb;
-    border: none;
-    box-shadow: none;
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
 }
 
 .dark-mode #toggle-theme:hover {
-    background: #3b82f6;
+    background-color: #3b82f6;
+    border-color: #3b82f6;
 }
 
 .dark-mode #log-search-input {
@@ -351,6 +395,24 @@ mark {
 
 .dark-mode #log-content pre {
     color: inherit;
+}
+
+.dark-mode #markdown-view {
+    background: #111827;
+    color: #e2e8f0;
+}
+
+.dark-mode #markdown-view h1,
+.dark-mode #markdown-view h2,
+.dark-mode #markdown-view h3,
+.dark-mode #markdown-view h4,
+.dark-mode #markdown-view h5,
+.dark-mode #markdown-view h6 {
+    color: #f8fafc;
+}
+
+.dark-mode #markdown-view code {
+    background: #1f2937;
 }
 
 .dark-mode #log-content .line-number {
