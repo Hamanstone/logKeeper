@@ -11,68 +11,6 @@ session_start();
     <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet">
-    <style>
-        #group-list .list-group-item {
-            cursor: pointer;
-        }
-        #preview-modal .modal-body {
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-        .tree {
-            list-style: none;
-            padding-left: 0;
-        }
-        .tree-node {
-            padding-left: 1.5em;
-        }
-        .tree-node .tree-toggler {
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        .tree-node .tree-toggler::before {
-            content: "►";
-            display: inline-block;
-            transition: transform 0.2s;
-        }
-        .tree-node.open > .tree-toggler::before {
-            transform: rotate(90deg);
-        }
-        .tree-node ul {
-            list-style: none;
-            padding-left: 1.5em;
-            display: none;
-        }
-        .tree-node.open > ul {
-            display: block;
-        }
-        .tree-leaf a {
-            text-decoration: none;
-            color: inherit;
-        }
-        .tree-leaf a.active {
-            font-weight: bold;
-        }
-        .highlight {
-            background-color: yellow;
-            color: black;
-        }
-        #preview-content.line-numbers-on {
-            counter-reset: line;
-        }
-        #preview-content.line-numbers-on .line::before {
-            content: counter(line);
-            counter-increment: line;
-            display: inline-block;
-            width: 3em;
-            padding-right: 1em;
-            margin-left: -4em;
-            text-align: right;
-            color: #999;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-    </style>
 </head>
 <body>
 
@@ -205,7 +143,144 @@ session_start();
 
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 <script src="js/scripts.js"></script>
+<script>
+$(document).ready(function() {
+    <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+    // Initialize DataTable
+    const logsTable = $('#logs-table').DataTable({
+        data: [],
+        columns: [
+            { data: 'name' },
+            { data: 'size' },
+            { data: 'modified' },
+            { data: 'actions' }
+        ]
+    });
+
+    // Load groups and populate search dropdowns
+    $.ajax({
+        url: 'api/groups.php',
+        dataType: 'json',
+        success: function(groups) {
+            const groupTree = $('#group-tree');
+            const customerSelect = $('#search-customer');
+            const skuSelect = $('#search-sku');
+            const addedSkus = new Set();
+
+            groupTree.empty();
+            const tree = $('<ul class="tree"></ul>');
+
+            Object.entries(groups).forEach(([customer, skus]) => {
+                const customerNode = $('<li class="tree-node"></li>');
+                customerNode.append(`<span class="tree-toggler"></span><strong>${customer}</strong>`);
+                
+                customerSelect.append($('<option>', { value: customer, text: customer }));
+
+                const skuList = $('<ul></ul>');
+                Object.entries(skus).forEach(([sku, dates]) => {
+                    const skuNode = $('<li class="tree-node"></li>');
+                    skuNode.append(`<span class="tree-toggler"></span>${sku}`);
+                    
+                    if (!addedSkus.has(sku)) {
+                        skuSelect.append($('<option>', { value: sku, text: sku }));
+                        addedSkus.add(sku);
+                    }
+
+                    const dateList = $('<ul></ul>');
+                    dates.forEach(date => {
+                        const dateNode = $(`<li class="tree-leaf"></li>`);
+                        dateNode.append(`<a href="#" data-customer="${customer}" data-sku="${sku}" data-date="${date}">${date}</a>`);
+                        dateList.append(dateNode);
+                    });
+                    skuNode.append(dateList);
+                    skuList.append(skuNode);
+                });
+                customerNode.append(skuList);
+                tree.append(customerNode);
+            });
+            groupTree.append(tree);
+        }
+    });
+
+    $('#search-form').on('submit', function(e) {
+        e.preventDefault();
+        const searchData = {
+            start: $('#search-start').val(),
+            end: $('#search-end').val(),
+            customer: $('#search-customer').val(),
+            sku: $('#search-sku').val()
+        };
+
+        $.ajax({
+            url: 'api/search.php',
+            data: searchData,
+            dataType: 'json',
+            success: function(response) {
+                logsTable.clear();
+                logsTable.rows.add(response.data);
+                logsTable.draw();
+            }
+        });
+    });
+
+    $('#search-form').on('reset', function() {
+        logsTable.clear().draw();
+    });
+
+    $('#group-tree').on('click', '.tree-toggler', function() {
+        $(this).parent('.tree-node').toggleClass('open');
+    });
+
+    $('#group-tree').on('click', '.tree-leaf a', function(e) {
+        e.preventDefault();
+
+        $('#group-tree .tree-leaf a').removeClass('active');
+        $(this).addClass('active');
+
+        const customer = $(this).data('customer');
+        const sku = $(this).data('sku');
+        const date = $(this).data('date');
+
+        $.ajax({
+            url: 'api/logs.php',
+            data: { customer, sku, date },
+            dataType: 'json',
+            success: function(response) {
+                logsTable.clear();
+                logsTable.rows.add(response.data);
+                logsTable.draw();
+            }
+        });
+    });
+
+    <?php else: ?>
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: 'api/auth/login.php',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                } else {
+                    $('#error-message').text(response.message).show();
+                }
+            },
+            error: function() {
+                $('#error-message').text('An error occurred during login.').show();
+            }
+        });
+    });
+    <?php endif; ?>
+});
+</script>
 
 </body>
 </html>

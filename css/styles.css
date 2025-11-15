@@ -282,3 +282,42 @@ mark {
     padding: 0.1em;
     border-radius: 3px;
 }
+
+/* Styles from index.php */
+#group-list .list-group-item {
+    cursor: pointer;
+}
+.tree {
+    list-style: none;
+    padding-left: 0;
+}
+.tree-node {
+    padding-left: 1.5em;
+}
+.tree-node .tree-toggler {
+    cursor: pointer;
+    margin-right: 5px;
+}
+.tree-node .tree-toggler::before {
+    content: "►";
+    display: inline-block;
+    transition: transform 0.2s;
+}
+.tree-node.open > .tree-toggler::before {
+    transform: rotate(90deg);
+}
+.tree-node ul {
+    list-style: none;
+    padding-left: 1.5em;
+    display: none;
+}
+.tree-node.open > ul {
+    display: block;
+}
+.tree-leaf a {
+    text-decoration: none;
+    color: inherit;
+}
+.tree-leaf a.active {
+    font-weight: bold;
+}
