@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const logContentEl = document.getElementById('log-content');
     const logFilenameEl = document.getElementById('log-filename');
     const logDetailsEl = document.getElementById('log-details');
+    const themeToggleBtn = document.getElementById('toggle-theme');
     const copyBtn = document.getElementById('copy-log');
     const downloadBtn = document.getElementById('download-log');
     const prevBtn = document.getElementById('prev-log');
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLogPath = '';
     let originalLogContent = '';
     let lineNumbersVisible = false;
+    let isDarkMode = false;
     let currentLogSiblings = [];
     let currentLogIndex = -1;
 
@@ -42,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 logPreviewModal.style.display = 'block';
                 updatePrevNextButtons();
+                applyThemePreference();
             })
             .catch(error => {
                 console.error('Error fetching log preview:', error);
@@ -103,6 +106,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 3. Modal Buttons and Actions
+    function applyThemePreference() {
+        if (!themeToggleBtn) return;
+        if (isDarkMode) {
+            logPreviewModal.classList.add('dark-mode');
+            themeToggleBtn.textContent = 'Light Mode';
+        } else {
+            logPreviewModal.classList.remove('dark-mode');
+            themeToggleBtn.textContent = 'Dark Mode';
+        }
+    }
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            applyThemePreference();
+        });
+
+        applyThemePreference();
+    }
+
     closeModal.addEventListener('click', () => {
         logPreviewModal.style.display = 'none';
     });

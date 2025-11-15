@@ -93,16 +93,17 @@ session_start();
     <div id="log-preview-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <span class="close">&times;</span>
                 <h2 id="log-filename"></h2>
-                <p id="log-details"></p>
+                <span class="close" role="button" aria-label="Close">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="controls">
+                    <button id="toggle-theme">Dark Mode</button>
                     <button id="copy-log">Copy</button>
                     <button id="download-log">Download</button>
                     <button id="toggle-line-numbers">Show Line Numbers</button>
                     <input type="text" id="log-search-input" placeholder="Search log...">
+                    <p id="log-details"></p>
                 </div>
                 <pre id="log-content"></pre>
             </div>
