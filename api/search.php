@@ -45,11 +45,9 @@ try {
     $logs = [];
     foreach ($results as $row) {
         $logs[] = [
-            'name' => $row['file_name'],
+            'name' => '<span class="file-name" data-path="' . htmlspecialchars($row['file_path']) . '">' . htmlspecialchars($row['file_name']) . '</span>',
             'size' => formatSizeUnits($row['file_size']),
-            'modified' => $row['modification_time'],
-            'actions' => '<button class="btn btn-sm btn-primary btn-preview" data-path="' . htmlspecialchars($row['file_path']) . '">Preview</button> ' .
-                         '<a href="api/download.php?path=' . urlencode($row['file_path']) . '" class="btn btn-sm btn-secondary">Download</a>'
+            'modified' => $row['modification_time']
         ];
     }
 

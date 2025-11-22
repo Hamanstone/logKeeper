@@ -10,6 +10,8 @@ session_start();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
@@ -38,9 +40,14 @@ session_start();
     <div class="container-fluid mt-3">
         <div class="row">
             <div class="col-md-3">
-                <h4>Groups</h4>
-                <div id="group-tree">
-                    <!-- Tree will be loaded here -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Groups</h4>
+                    <button class="btn btn-sm btn-outline-secondary" id="collapse-all-groups">
+                        <i class="bi bi-arrows-collapse"></i>
+                    </button>
+                </div>
+                <div id="group-cards" class="group-cards-container">
+                    <!-- Cards will be loaded here -->
                 </div>
             </div>
             <div class="col-md-9">
@@ -85,9 +92,8 @@ session_start();
                                 <input type="checkbox" id="select-all-checkbox" title="Select All">
                             </th>
                             <th>File Name</th>
-                            <th>File Size</th>
-                            <th>Modification Time</th>
-                            <th>Actions</th>
+                            <th style="width: 100px;">File Size</th>
+                            <th style="width: 180px;">Modification Time</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -159,6 +165,8 @@ session_start();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.47/bundles/js/diff2html.min.js"></script>
 <script src="js/scripts.js"></script>
 <script>
 $(document).ready(function() {
@@ -175,8 +183,7 @@ $(document).ready(function() {
             },
             { data: 'name' },
             { data: 'size' },
-            { data: 'modified' },
-            { data: 'actions' }
+            { data: 'modified' }
         ]
     });
 
@@ -185,46 +192,101 @@ $(document).ready(function() {
         url: 'api/groups.php',
         dataType: 'json',
         success: function(groups) {
-            const groupTree = $('#group-tree');
+            const groupCards = $('#group-cards');
             const customerSelect = $('#search-customer');
             const skuSelect = $('#search-sku');
             const addedSkus = new Set();
 
-            groupTree.empty();
-            const tree = $('<ul class="tree"></ul>');
+            groupCards.empty();
+            customerSelect.find('option:not(:first)').remove();
+            skuSelect.find('option:not(:first)').remove();
 
             Object.entries(groups).forEach(([customer, skus]) => {
-                const customerNode = $('<li class="tree-node"></li>');
-                customerNode.append(`<span class="tree-toggler"></span><strong>${customer}</strong>`);
-                
+                // Add to customer dropdown
                 customerSelect.append($('<option>', { value: customer, text: customer }));
 
-                const skuList = $('<ul></ul>');
+                // Create customer card
+                const card = $('<div>', { class: 'customer-card' });
+                
+                // Card header
+                const cardHeader = $('<div>', { class: 'customer-card-header' });
+                cardHeader.html(`
+                    <div class="customer-name">
+                        <i class="bi bi-building"></i>
+                        <span>${customer}</span>
+                    </div>
+                    <div class="customer-stats">
+                        <span class="badge bg-secondary">${Object.keys(skus).length} SKUs</span>
+                        <i class="bi bi-chevron-down card-chevron"></i>
+                    </div>
+                `);
+                card.append(cardHeader);
+
+                // Card body with SKU badges
+                const cardBody = $('<div>', { class: 'customer-card-body' });
+                const skuContainer = $('<div>', { class: 'sku-badges' });
+
                 Object.entries(skus).forEach(([sku, dates]) => {
-                    const skuNode = $('<li class="tree-node"></li>');
-                    skuNode.append(`<span class="tree-toggler"></span>${sku}`);
-                    
+                    // Add to SKU dropdown
                     if (!addedSkus.has(sku)) {
                         skuSelect.append($('<option>', { value: sku, text: sku }));
                         addedSkus.add(sku);
                     }
 
-                    const dateList = $('<ul></ul>');
-                    dates.forEach(date => {
-                        const dateNode = $(`<li class="tree-leaf"></li>`);
-                        dateNode.append(`<a href="#" data-customer="${customer}" data-sku="${sku}" data-date="${date}">${date}</a>`);
-                        dateList.append(dateNode);
+                    // Create SKU badge
+                    const skuBadge = $('<div>', { 
+                        class: 'sku-badge',
+                        'data-customer': customer,
+                        'data-sku': sku
                     });
-                    skuNode.append(dateList);
-                    skuList.append(skuNode);
+                    
+                    // Create badge header with name and count
+                    const badgeHeader = $('<div>', { class: 'sku-badge-header' });
+                    badgeHeader.html(`
+                        <span class="sku-name">${sku}</span>
+                        <span class="sku-count">${dates.length}</span>
+                    `);
+                    skuBadge.append(badgeHeader);
+
+                    // Create date list (hidden by default)
+                    const dateList = $('<div>', { class: 'date-list' });
+                    dates.forEach(date => {
+                        const dateItem = $('<a>', {
+                            href: '#',
+                            class: 'date-item',
+                            'data-customer': customer,
+                            'data-sku': sku,
+                            'data-date': date
+                        });
+                        dateItem.html(`
+                            <i class="bi bi-calendar3"></i>
+                            <span>${date}</span>
+                        `);
+                        dateList.append(dateItem);
+                    });
+
+                    skuBadge.append(dateList);
+                    skuContainer.append(skuBadge);
                 });
-                customerNode.append(skuList);
-                tree.append(customerNode);
+
+                cardBody.append(skuContainer);
+                card.append(cardBody);
+                        groupCards.append(card);
             });
-            groupTree.append(tree);
         }
     });
 
+    // Toggle card collapse/expand
+    $('#group-cards').on('click', '.customer-card-header', function(e) {
+        e.stopPropagation();
+        const card = $(this).closest('.customer-card');
+        const cardBody = card.find('.customer-card-body');
+        
+        card.toggleClass('collapsed');
+        cardBody.slideToggle(200);
+    });
+
+    // Search form submission
     $('#search-form').on('submit', function(e) {
         e.preventDefault();
         const searchData = {
@@ -246,14 +308,25 @@ $(document).ready(function() {
         });
     });
 
-    $('#group-tree').on('click', '.tree-toggler', function() {
-        $(this).parent('.tree-node').toggleClass('open');
+    // SKU badge click - toggle date list
+    $('#group-cards').on('click', '.sku-badge', function(e) {
+        e.stopPropagation();
+        const $this = $(this);
+        
+        // Close other open date lists in the same card
+        $this.siblings('.sku-badge').removeClass('active').find('.date-list').slideUp(200);
+        
+        // Toggle this date list
+        $this.toggleClass('active');
+        $this.find('.date-list').slideToggle(200);
     });
 
-    $('#group-tree').on('click', '.tree-leaf a', function(e) {
+    // Date item click - load logs
+    $('#group-cards').on('click', '.date-item', function(e) {
         e.preventDefault();
 
-        $('#group-tree .tree-leaf a').removeClass('active');
+        // Remove active class from all date items
+        $('.date-item').removeClass('active');
         $(this).addClass('active');
 
         const customer = $(this).data('customer');
@@ -270,6 +343,12 @@ $(document).ready(function() {
                 logsTable.draw();
             }
         });
+    });
+
+    // Collapse all groups
+    $('#collapse-all-groups').on('click', function() {
+        $('.sku-badge').removeClass('active');
+        $('.date-list').slideUp(200);
     });
 
     // Batch selection functionality
@@ -291,7 +370,7 @@ $(document).ready(function() {
         $('#logs-table tbody .row-checkbox').each(function() {
             $(this).prop('checked', isChecked);
             const row = $(this).closest('tr');
-            const path = row.find('.btn-preview').data('path');
+            const path = row.find('.file-name').data('path');
             
             if (isChecked) {
                 selectedFiles.add(path);
@@ -309,7 +388,7 @@ $(document).ready(function() {
         e.stopPropagation();
         const isChecked = $(this).prop('checked');
         const row = $(this).closest('tr');
-        const path = row.find('.btn-preview').data('path');
+        const path = row.find('.file-name').data('path');
         
         if (isChecked) {
             selectedFiles.add(path);
@@ -330,12 +409,20 @@ $(document).ready(function() {
     // Click on row to toggle checkbox
     $('#logs-table tbody').on('click', 'tr', function(e) {
         // Don't toggle if clicking on action buttons or checkbox itself
-        if ($(e.target).hasClass('btn-preview') || $(e.target).hasClass('row-checkbox')) {
+        if ($(e.target).hasClass('row-checkbox')) {
             return;
         }
         
         const checkbox = $(this).find('.row-checkbox');
         checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+    });
+
+    // Double-click on row to preview
+    $('#logs-table tbody').on('dblclick', 'tr', function(e) {
+        const path = $(this).find('.file-name').data('path');
+        if (path) {
+            showLogPreview(path);
+        }
     });
 
     // Batch download button
@@ -379,6 +466,256 @@ $(document).ready(function() {
         logsTable.clear().draw();
     });
 
+    // Custom Context Menu
+    const contextMenu = $('#custom-context-menu');
+    let contextMenuTargetRow = null;
+
+    // Show context menu on right-click
+    $('#logs-table tbody').on('contextmenu', 'tr', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        contextMenuTargetRow = $(this);
+        const path = contextMenuTargetRow.find('.file-name').data('path');
+        
+        // If no path, don't show menu
+        if (!path) return false;
+        
+        // Get menu dimensions (show it first to measure)
+        contextMenu.css({
+            display: 'block',
+            visibility: 'hidden',
+            left: '0px',
+            top: '0px'
+        });
+        
+        const menuWidth = contextMenu.outerWidth();
+        const menuHeight = contextMenu.outerHeight();
+        const windowWidth = $(window).width();
+        const windowHeight = $(window).height();
+        const scrollTop = $(window).scrollTop();
+        const scrollLeft = $(window).scrollLeft();
+        
+        // Calculate position (use clientX/clientY + scroll offset)
+        let left = e.clientX + scrollLeft;
+        let top = e.clientY + scrollTop;
+        
+        // Adjust if menu would go off-screen (viewport coordinates)
+        if (e.clientX + menuWidth > windowWidth) {
+            left = e.clientX + scrollLeft - menuWidth;
+        }
+        if (e.clientY + menuHeight > windowHeight) {
+            top = e.clientY + scrollTop - menuHeight;
+        }
+        
+        // Position the context menu and make it visible
+        contextMenu.css({
+            visibility: 'visible',
+            left: left + 'px',
+            top: top + 'px'
+        });
+        
+        // Update batch download menu item state
+        const batchDownloadItem = $('#ctx-batch-download');
+        if (selectedFiles.size > 0) {
+            batchDownloadItem.removeClass('disabled');
+        } else {
+            batchDownloadItem.addClass('disabled');
+        }
+        
+        // Update compare menu item state (show only when exactly 2 files selected)
+        const compareItem = $('#ctx-compare');
+        if (selectedFiles.size === 2) {
+            compareItem.show();
+        } else {
+            compareItem.hide();
+        }
+        
+        return false;
+    });
+
+    // Hide context menu on click outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.context-menu').length) {
+            contextMenu.hide();
+        }
+    });
+
+    // Hide context menu on ESC key
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && contextMenu.is(':visible')) {
+            contextMenu.hide();
+        }
+    });
+
+    // Prevent default context menu on the custom menu itself
+    contextMenu.on('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // Context menu actions
+    $('#ctx-preview').on('click', function() {
+        if (contextMenuTargetRow) {
+            const path = contextMenuTargetRow.find('.file-name').data('path');
+            if (path) {
+                showLogPreview(path);
+            }
+        }
+        contextMenu.hide();
+    });
+
+    $('#ctx-download').on('click', function() {
+        if (contextMenuTargetRow) {
+            const path = contextMenuTargetRow.find('.file-name').data('path');
+            if (path) {
+                window.location.href = `api/download.php?path=${encodeURIComponent(path)}`;
+            }
+        }
+        contextMenu.hide();
+    });
+
+    $('#ctx-select').on('click', function() {
+        if (contextMenuTargetRow) {
+            const checkbox = contextMenuTargetRow.find('.row-checkbox');
+            if (checkbox.length) {
+                checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+            }
+        }
+        contextMenu.hide();
+    });
+
+    $('#ctx-batch-download').on('click', function() {
+        if (!$(this).hasClass('disabled')) {
+            $('#batch-download-btn').click();
+        }
+        contextMenu.hide();
+    });
+
+    // File Comparison functionality
+    let currentDiffView = 'side-by-side'; // or 'line-by-line'
+    const compareModal = $('#compare-modal');
+    const compareClose = $('#compare-close');
+    const compareViewToggle = $('#compare-view-toggle');
+    const compareDiffOutput = $('#compare-diff-output');
+    const compareFile1Name = $('#compare-file1-name');
+    const compareFile2Name = $('#compare-file2-name');
+
+    $('#ctx-compare').on('click', function() {
+        if (selectedFiles.size !== 2) {
+            alert('Please select exactly 2 files to compare.');
+            contextMenu.hide();
+            return;
+        }
+
+        const paths = Array.from(selectedFiles);
+        
+        // Show loading
+        compareModal.show();
+        compareDiffOutput.html('<div style="padding: 40px; text-align: center;"><i class="bi bi-hourglass-split"></i> Loading files...</div>');
+        
+        // Fetch and compare files
+        $.ajax({
+            type: 'POST',
+            url: 'api/compare.php',
+            data: {
+                path1: paths[0],
+                path2: paths[1]
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) {
+                    compareDiffOutput.html('<div style="padding: 40px; text-align: center; color: #dc3545;"><i class="bi bi-exclamation-triangle"></i> ' + response.error + '</div>');
+                    return;
+                }
+                
+                // Update file names
+                compareFile1Name.text(response.file1.name);
+                compareFile2Name.text(response.file2.name);
+                
+                // Generate and display diff
+                renderDiff(response.file1.content, response.file2.content, response.file1.name, response.file2.name);
+            },
+            error: function(xhr) {
+                let errorMsg = 'Failed to load files for comparison.';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                compareDiffOutput.html('<div style="padding: 40px; text-align: center; color: #dc3545;"><i class="bi bi-exclamation-triangle"></i> ' + errorMsg + '</div>');
+            }
+        });
+        
+        contextMenu.hide();
+    });
+
+    function renderDiff(content1, content2, filename1, filename2) {
+        // Create unified diff using diff library
+        const diff = Diff.createTwoFilesPatch(
+            filename1,
+            filename2,
+            content1,
+            content2,
+            '',
+            '',
+            { context: 3 }
+        );
+        
+        // Render with diff2html
+        const diffHtml = Diff2Html.html(diff, {
+            drawFileList: false,
+            matching: 'lines',
+            outputFormat: currentDiffView === 'side-by-side' ? 'side-by-side' : 'line-by-line',
+            renderNothingWhenEmpty: false
+        });
+        
+        compareDiffOutput.html(diffHtml);
+    }
+
+    compareViewToggle.on('click', function() {
+        // Toggle view
+        currentDiffView = currentDiffView === 'side-by-side' ? 'line-by-line' : 'side-by-side';
+        
+        // Re-render if we have content
+        const file1Name = compareFile1Name.text();
+        const file2Name = compareFile2Name.text();
+        
+        if (file1Name && file2Name) {
+            // We need to store the original content to re-render
+            // For now, just update the button text
+            $(this).html(currentDiffView === 'side-by-side' 
+                ? '<i class="bi bi-list-ul"></i> Unified View' 
+                : '<i class="bi bi-layout-split"></i> Side-by-Side');
+            
+            // Trigger a re-fetch (simplified approach)
+            // In production, you'd want to cache the content
+            const paths = Array.from(selectedFiles);
+            if (paths.length === 2) {
+                $.ajax({
+                    type: 'POST',
+                    url: 'api/compare.php',
+                    data: { path1: paths[0], path2: paths[1] },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (!response.error) {
+                            renderDiff(response.file1.content, response.file2.content, response.file1.name, response.file2.name);
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    compareClose.on('click', function() {
+        compareModal.hide();
+    });
+
+    // Close modal on click outside
+    compareModal.on('click', function(e) {
+        if (e.target === this) {
+            compareModal.hide();
+        }
+    });
+
     <?php else: ?>
     $('#loginForm').on('submit', function(e) {
         e.preventDefault();
@@ -402,6 +739,52 @@ $(document).ready(function() {
     <?php endif; ?>
 });
 </script>
+
+<!-- Custom Context Menu -->
+<div id="custom-context-menu" class="context-menu" style="display: none;">
+    <ul>
+        <li id="ctx-preview">
+            <i class="bi bi-eye"></i> Preview
+        </li>
+        <li id="ctx-download">
+            <i class="bi bi-download"></i> Download
+        </li>
+        <li class="separator"></li>
+        <li id="ctx-select">
+            <i class="bi bi-check-square"></i> Select/Deselect
+        </li>
+        <li id="ctx-batch-download">
+            <i class="bi bi-file-earmark-zip"></i> Batch Download Selected
+        </li>
+        <li class="separator"></li>
+        <li id="ctx-compare" style="display: none;">
+            <i class="bi bi-file-diff"></i> Compare Files
+        </li>
+    </ul>
+</div>
+
+<!-- File Comparison Modal -->
+<div id="compare-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 95%; width: 95%;">
+        <div class="modal-header">
+            <h2 id="compare-title">File Comparison</h2>
+            <span class="close" id="compare-close" role="button" aria-label="Close">&times;</span>
+        </div>
+        <div class="modal-body" style="padding: 0;">
+            <div class="compare-controls" style="padding: 15px 25px; background: #f7f7f7; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px; align-items: center;">
+                <button id="compare-view-toggle" class="btn btn-sm btn-primary">
+                    <i class="bi bi-layout-split"></i> Toggle View
+                </button>
+                <div style="flex: 1; display: flex; gap: 15px; font-size: 13px; color: #555;">
+                    <span id="compare-file1-name"></span>
+                    <span style="color: #999;">vs</span>
+                    <span id="compare-file2-name"></span>
+                </div>
+            </div>
+            <div id="compare-diff-output" style="overflow: auto; max-height: 70vh; background: #fff;"></div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

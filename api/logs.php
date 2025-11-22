@@ -53,11 +53,9 @@ try {
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $relativePath = str_replace(__DIR__ . '/../uploads/', '', $row['file_path']);
         $logs[] = [
-            'name' => $row['file_name'],
+            'name' => '<span class="file-name" data-path="' . htmlspecialchars($row['file_path']) . '">' . htmlspecialchars($row['file_name']) . '</span>',
             'size' => formatSizeUnits($row['file_size']),
-            'modified' => $row['modification_time'],
-            'actions' => '<button class="btn btn-sm btn-primary btn-preview" data-path="' . htmlspecialchars($row['file_path']) . '">Preview</button> ' .
-                         '<a href="api/download.php?path=' . urlencode($row['file_path']) . '" class="btn btn-sm btn-secondary">Download</a>'
+            'modified' => $row['modification_time']
         ];
     }
 

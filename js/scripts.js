@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let markdownVisible = false;
 
     // 1. Show Log Preview Modal
-    function showLogPreview(logPath) {
+    window.showLogPreview = function(logPath) {
         if (!logPath) return;
         currentLogPath = logPath;
 
