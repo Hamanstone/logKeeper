@@ -46,6 +46,15 @@ session_start();
                         <i class="bi bi-arrows-collapse"></i>
                     </button>
                 </div>
+                <div class="mb-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="group-search" placeholder="Search customers, SKUs...">
+                        <button class="btn btn-outline-secondary" type="button" id="clear-group-search" style="display: none;">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
                 <div id="group-cards" class="group-cards-container">
                     <!-- Cards will be loaded here -->
                 </div>
@@ -349,6 +358,82 @@ $(document).ready(function() {
     $('#collapse-all-groups').on('click', function() {
         $('.sku-badge').removeClass('active');
         $('.date-list').slideUp(200);
+    });
+
+    // Group search functionality
+    $('#group-search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase().trim();
+        const clearBtn = $('#clear-group-search');
+        
+        // Show/hide clear button
+        if (searchTerm) {
+            clearBtn.show();
+        } else {
+            clearBtn.hide();
+        }
+        
+        // If empty, show all cards
+        if (!searchTerm) {
+            $('.customer-card').show();
+            $('.sku-badge').show();
+            return;
+        }
+        
+        // Filter cards
+        $('.customer-card').each(function() {
+            const $card = $(this);
+            const customerName = $card.find('.customer-name span').text().toLowerCase();
+            let hasMatch = false;
+            
+            // Check if customer name matches
+            if (customerName.includes(searchTerm)) {
+                hasMatch = true;
+                $card.show();
+                // Expand card if collapsed
+                if ($card.hasClass('collapsed')) {
+                    $card.removeClass('collapsed');
+                    $card.find('.customer-card-body').slideDown(200);
+                }
+                // Show all SKUs in this card
+                $card.find('.sku-badge').show();
+            } else {
+                // Check SKUs and dates
+                let hasMatchingSku = false;
+                $card.find('.sku-badge').each(function() {
+                    const $badge = $(this);
+                    const skuName = $badge.find('.sku-name').text().toLowerCase();
+                    const dates = $badge.find('.date-item span').map(function() {
+                        return $(this).text().toLowerCase();
+                    }).get();
+                    
+                    // Check if SKU name or any date matches
+                    if (skuName.includes(searchTerm) || dates.some(date => date.includes(searchTerm))) {
+                        $badge.show();
+                        hasMatchingSku = true;
+                    } else {
+                        $badge.hide();
+                    }
+                });
+                
+                if (hasMatchingSku) {
+                    hasMatch = true;
+                    $card.show();
+                    // Expand card if collapsed
+                    if ($card.hasClass('collapsed')) {
+                        $card.removeClass('collapsed');
+                        $card.find('.customer-card-body').slideDown(200);
+                    }
+                } else {
+                    $card.hide();
+                }
+            }
+        });
+    });
+
+    // Clear search button
+    $('#clear-group-search').on('click', function() {
+        $('#group-search').val('').trigger('input');
+        $(this).hide();
     });
 
     // Batch selection functionality
