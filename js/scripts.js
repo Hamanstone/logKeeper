@@ -25,8 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let markdownVisible = false;
 
     // 1. Show Log Preview Modal
-    window.showLogPreview = function(logPath) {
+    window.showLogPreview = function (logPath) {
         if (!logPath) return;
+
+        // Update context for navigation
+        const rows = Array.from(document.querySelectorAll('#logs-table tbody tr'));
+        currentLogSiblings = rows;
+        currentLogIndex = rows.findIndex(row => {
+            const nameSpan = row.querySelector('.file-name');
+            return nameSpan && nameSpan.dataset.path === logPath;
+        });
+
         currentLogPath = logPath;
 
         fetch(`api/log_preview.php?path=${encodeURIComponent(logPath)}`)
@@ -74,11 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function escapeHtml(unsafe) {
         return unsafe
-             .replace(/&/g, "&amp;")
-             .replace(/</g, "&lt;")
-             .replace(/>/g, "&gt;")
-             .replace(/"/g, "&quot;")
-             .replace(/'/g, "&#039;");
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     // 2. Unified Log View Rendering
@@ -282,24 +291,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Prev/Next Logic
     function updatePrevNextButtons() {
         prevBtn.disabled = currentLogIndex <= 0;
-        nextBtn.disabled = currentLogIndex >= currentLogSiblings.length - 1;
+        nextBtn.disabled = currentLogIndex === -1 || currentLogIndex >= currentLogSiblings.length - 1;
+    }
+
+    function getLogPathFromRow(row) {
+        const nameSpan = row.querySelector('.file-name');
+        return nameSpan ? nameSpan.dataset.path : null;
     }
 
     prevBtn.addEventListener('click', () => {
         if (currentLogIndex > 0) {
-            currentLogIndex--;
-            const prevRow = currentLogSiblings[currentLogIndex];
-            const logPath = prevRow.querySelector('.btn-preview').dataset.path;
-            showLogPreview(logPath);
+            // currentLogIndex will be updated in showLogPreview
+            const prevRow = currentLogSiblings[currentLogIndex - 1];
+            const logPath = getLogPathFromRow(prevRow);
+            if (logPath) showLogPreview(logPath);
         }
     });
 
     nextBtn.addEventListener('click', () => {
         if (currentLogIndex < currentLogSiblings.length - 1) {
-            currentLogIndex++;
-            const nextRow = currentLogSiblings[currentLogIndex];
-            const logPath = nextRow.querySelector('.btn-preview').dataset.path;
-            showLogPreview(logPath);
+            // currentLogIndex will be updated in showLogPreview
+            const nextRow = currentLogSiblings[currentLogIndex + 1];
+            const logPath = getLogPathFromRow(nextRow);
+            if (logPath) showLogPreview(logPath);
         }
     });
 
@@ -323,16 +337,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     searchInput.addEventListener('input', () => {
         updateLogView();
-    });
-
-    // 6. Event Listener for logs table
-    logsTableBody.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-preview')) {
-            const logPath = e.target.dataset.path;
-            const parentRow = e.target.closest('tr');
-            currentLogSiblings = Array.from(logsTableBody.querySelectorAll('tr'));
-            currentLogIndex = currentLogSiblings.findIndex(row => row === parentRow);
-            showLogPreview(logPath);
-        }
     });
 });

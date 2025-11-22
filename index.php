@@ -61,52 +61,58 @@ session_start();
                 </div>
             </div>
             <div class="col-md-9">
-                <h4>Search</h4>
-                <form id="search-form" class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label for="search-date-range" class="form-label">Date Range</label>
-                        <input type="text" class="form-control" id="search-date-range" placeholder="Select date range...">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="search-customer" class="form-label">Customer</label>
-                        <select class="form-select" id="search-customer">
-                            <option value="">All Customers</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="search-sku" class="form-label">SKU</label>
-                        <select class="form-select" id="search-sku">
-                            <option value="">All SKUs</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">Search</button>
-                    </div>
-                    <div class="col-md-12">
-                        <button type="reset" class="btn btn-secondary btn-sm">Reset</button>
-                    </div>
-                </form>
-                <hr>
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <!-- Search Section -->
+                <div class="card-modern">
+                    <h4 class="mb-3">Search</h4>
+                    <form id="search-form" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search-date-range" class="form-label">Date Range</label>
+                            <input type="text" class="form-control" id="search-date-range" placeholder="Select date range...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search-customer" class="form-label">Customer</label>
+                            <select class="form-select" id="search-customer">
+                                <option value="">All Customers</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search-sku" class="form-label">SKU</label>
+                            <select class="form-select" id="search-sku">
+                                <option value="">All SKUs</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </div>
+                        <div class="col-md-12 d-flex justify-content-end">
+                            <button type="reset" class="btn btn-outline-secondary btn-sm">Reset Filters</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Logs Table Section -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="mb-0">Logs</h4>
-                    <button id="batch-download-btn" class="btn btn-success" style="display: none;">
-                        <i class="bi bi-download"></i> Download Selected (<span id="selected-count">0</span>)
+                    <button id="batch-download-btn" class="btn btn-success btn-sm" style="display: none;">
+                        <i class="bi bi-download"></i> Download Selected (<span class="count">0</span>)
                     </button>
                 </div>
-                <table id="logs-table" class="table table-striped table-bordered" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" id="select-all-checkbox" title="Select All">
-                            </th>
-                            <th>File Name</th>
-                            <th style="width: 100px;">File Size</th>
-                            <th style="width: 180px;">Modification Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table id="logs-table" class="table table-hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="select-all-checkbox" title="Select All">
+                                </th>
+                                <th>File Name</th>
+                                <th style="width: 100px;">File Size</th>
+                                <th style="width: 180px;">Modification Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -504,10 +510,8 @@ $(document).ready(function() {
         e.stopPropagation();
         
         const $checkbox = $(this);
-        const $row = $checkbox.closest('tr');
-        const path = $row.find('.file-name').data('path');
-        const currentIndex = $row.index();
-        const isChecked = $checkbox.prop('checked'); // This is the new state after click
+        const currentIndex = $checkbox.closest('tr').index();
+        const isChecked = $checkbox.prop('checked');
         
         // Handle Shift+Click for range selection
         if (e.shiftKey && lastCheckedIndex !== -1) {
@@ -517,26 +521,26 @@ $(document).ready(function() {
             
             // Sync all rows in range to the current checkbox's state
             for (let i = start; i <= end; i++) {
-                // Skip the current row as it's already handled by browser (and we'll update set below)
+                // Skip the current row as it's already handled
                 if (i === currentIndex) continue;
                 
-                const $currentRow = $rows.eq(i);
-                const $cb = $currentRow.find('.row-checkbox');
-                const rowPath = $currentRow.find('.file-name').data('path');
-                
-                $cb.prop('checked', isChecked);
-                
-                if (isChecked) {
-                    selectedFiles.add(rowPath);
-                    $currentRow.addClass('table-active');
-                } else {
-                    selectedFiles.delete(rowPath);
-                    $currentRow.removeClass('table-active');
+                const $cb = $rows.eq(i).find('.row-checkbox');
+                if ($cb.prop('checked') !== isChecked) {
+                    $cb.prop('checked', isChecked).trigger('change');
                 }
             }
         }
         
-        // Update the clicked row's status in the set
+        lastCheckedIndex = currentIndex;
+    });
+
+    // Handle state changes (triggered by click or programmatic change)
+    $('#logs-table tbody').on('change', '.row-checkbox', function() {
+        const $checkbox = $(this);
+        const $row = $checkbox.closest('tr');
+        const path = $row.find('.file-name').data('path');
+        const isChecked = $checkbox.prop('checked');
+        
         if (isChecked) {
             selectedFiles.add(path);
             $row.addClass('table-active');
@@ -545,8 +549,6 @@ $(document).ready(function() {
             $row.removeClass('table-active');
         }
         
-        // Update last checked index
-        lastCheckedIndex = currentIndex;
         updateBatchDownloadButton();
     });
 
@@ -557,8 +559,29 @@ $(document).ready(function() {
             return;
         }
         
-        const checkbox = $(this).find('.row-checkbox');
-        checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+        const $checkbox = $(this).find('.row-checkbox');
+        const isChecked = !$checkbox.prop('checked');
+        const currentIndex = $(this).index();
+        
+        // Handle Shift+Click on row
+        if (e.shiftKey && lastCheckedIndex !== -1) {
+            const start = Math.min(lastCheckedIndex, currentIndex);
+            const end = Math.max(lastCheckedIndex, currentIndex);
+            const $rows = $('#logs-table tbody tr');
+            
+            for (let i = start; i <= end; i++) {
+                const $cb = $rows.eq(i).find('.row-checkbox');
+                // Determine target state: match the clicked row's new state
+                if ($cb.prop('checked') !== isChecked) {
+                    $cb.prop('checked', isChecked).trigger('change');
+                }
+            }
+        } else {
+            // Normal toggle
+            $checkbox.prop('checked', isChecked).trigger('change');
+        }
+        
+        lastCheckedIndex = currentIndex;
     });
 
     // Double-click on row to preview
