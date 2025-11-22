@@ -1,4 +1,3 @@
-
 # 📘 《Log Explorer Web 系統》開發計畫書
 
 **版本：1.0**
@@ -120,6 +119,8 @@ GET /api/logs.php         → 查詢特定客戶/機種/日期
 * 使用 Modal 彈出 log 預覽視窗
 * 可選擇「下一頁 / 上一頁」讀取後續 chunk
 * 可完整搜尋 log 字串（前端 JS 自帶）
+* 工具列集中 Copy / Download / 行號切換 / 搜尋輸入框 / 檔案資訊顯示
+* Modal 內建 Light / Dark Mode 切換按鈕
 
 ### API
 
@@ -204,6 +205,22 @@ GET /api/search.php?start=2025-11-14T09:00&end=2025-11-14T11:00&customer=PEGA&sk
 
 ---
 
+## 3.7 Markdown 說明檔預覽
+
+### 功能描述
+
+* 副檔名 `.md` / `.markdown` 之檔案會自動以 Markdown 模式開啟，可隨時切換回 Raw 文字。
+* 使用 Marked.js 解析，支援標題、段落、列表、引用、表格與程式碼區塊等元素。
+* 每個程式碼區塊皆會顯示獨立 Copy 按鈕，方便複製 JSON / shell 指令片段。
+* Markdown 視圖同樣提供 Light / Dark Mode，並對表格、程式碼設定專屬版面與顏色。
+
+### 技術細節
+
+* Markdown 與 Raw 模式共用同一個 Modal，因此仍可使用上一檔 / 下一檔、搜尋輸入框等功能。
+* Copy 功能採用 Clipboard API，並保留 `execCommand` 後備方案確保舊版瀏覽器亦可使用。
+
+---
+
 # 4. 系統設計細節（System Design Detail）
 
 ## 4.1 資料表結構（file_tracking_logs）
@@ -256,8 +273,9 @@ CREATE TABLE file_tracking_logs (
 * Modal 彈窗
 * Prism.js highlight
 * Chunk mode
-* Copy 按鈕
-* Download 按鈕
+* Copy / Download / 行號切換 / 搜尋輸入框
+* Light / Dark Mode 切換
+* Markdown 視圖：自動解析 `.md` 檔，程式碼區塊附 Copy 鈕，表格具備專屬樣式
 
 ## 5.3 Dashboard（ECharts）
 

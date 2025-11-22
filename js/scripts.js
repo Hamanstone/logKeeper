@@ -57,6 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 logPreviewModal.style.display = 'block';
                 updatePrevNextButtons();
                 applyThemePreference();
+
+                if (isMarkdownFile) {
+                    markdownVisible = true;
+                    renderMarkdownView();
+                    markdownView.style.display = 'block';
+                    logContentEl.style.display = 'none';
+                    updateMarkdownControls();
+                }
             })
             .catch(error => {
                 console.error('Error fetching log preview:', error);
