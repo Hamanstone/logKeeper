@@ -467,20 +467,23 @@ $(document).ready(function() {
 
     // Batch selection functionality
     let selectedFiles = new Set();
+    let lastCheckedIndex = -1; // Track last checked row for shift-click
 
     function updateBatchDownloadButton() {
-        const count = selectedFiles.size;
-        $('#selected-count').text(count);
-        if (count > 0) {
-            $('#batch-download-btn').show();
+        const btn = $('#batch-download-btn');
+        if (selectedFiles.size > 0) {
+            btn.find('.count').text(selectedFiles.size);
+            btn.show();
         } else {
-            $('#batch-download-btn').hide();
+            btn.hide();
         }
     }
 
     // Select all checkbox
     $('#select-all-checkbox').on('change', function() {
         const isChecked = $(this).prop('checked');
+        selectedFiles.clear();
+        
         $('#logs-table tbody .row-checkbox').each(function() {
             $(this).prop('checked', isChecked);
             const row = $(this).closest('tr');
@@ -490,33 +493,60 @@ $(document).ready(function() {
                 selectedFiles.add(path);
                 row.addClass('table-active');
             } else {
-                selectedFiles.delete(path);
                 row.removeClass('table-active');
             }
         });
         updateBatchDownloadButton();
     });
 
-    // Individual row checkbox
-    $('#logs-table tbody').on('change', '.row-checkbox', function(e) {
+    // Individual row checkbox with Shift-click support
+    $('#logs-table tbody').on('click', '.row-checkbox', function(e) {
         e.stopPropagation();
-        const isChecked = $(this).prop('checked');
-        const row = $(this).closest('tr');
-        const path = row.find('.file-name').data('path');
         
-        if (isChecked) {
-            selectedFiles.add(path);
-            row.addClass('table-active');
-        } else {
-            selectedFiles.delete(path);
-            row.removeClass('table-active');
+        const $checkbox = $(this);
+        const $row = $checkbox.closest('tr');
+        const path = $row.find('.file-name').data('path');
+        const currentIndex = $row.index();
+        const isChecked = $checkbox.prop('checked'); // This is the new state after click
+        
+        // Handle Shift+Click for range selection
+        if (e.shiftKey && lastCheckedIndex !== -1) {
+            const start = Math.min(lastCheckedIndex, currentIndex);
+            const end = Math.max(lastCheckedIndex, currentIndex);
+            const $rows = $('#logs-table tbody tr');
+            
+            // Sync all rows in range to the current checkbox's state
+            for (let i = start; i <= end; i++) {
+                // Skip the current row as it's already handled by browser (and we'll update set below)
+                if (i === currentIndex) continue;
+                
+                const $currentRow = $rows.eq(i);
+                const $cb = $currentRow.find('.row-checkbox');
+                const rowPath = $currentRow.find('.file-name').data('path');
+                
+                $cb.prop('checked', isChecked);
+                
+                if (isChecked) {
+                    selectedFiles.add(rowPath);
+                    $currentRow.addClass('table-active');
+                } else {
+                    selectedFiles.delete(rowPath);
+                    $currentRow.removeClass('table-active');
+                }
+            }
         }
         
-        // Update select-all checkbox state
-        const totalCheckboxes = $('#logs-table tbody .row-checkbox').length;
-        const checkedCheckboxes = $('#logs-table tbody .row-checkbox:checked').length;
-        $('#select-all-checkbox').prop('checked', totalCheckboxes === checkedCheckboxes && totalCheckboxes > 0);
+        // Update the clicked row's status in the set
+        if (isChecked) {
+            selectedFiles.add(path);
+            $row.addClass('table-active');
+        } else {
+            selectedFiles.delete(path);
+            $row.removeClass('table-active');
+        }
         
+        // Update last checked index
+        lastCheckedIndex = currentIndex;
         updateBatchDownloadButton();
     });
 
