@@ -12,6 +12,7 @@ session_start();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
@@ -62,29 +63,27 @@ session_start();
             <div class="col-md-9">
                 <h4>Search</h4>
                 <form id="search-form" class="row g-3 mb-3">
-                    <div class="col-md-3">
-                        <label for="search-start" class="form-label">Start Time</label>
-                        <input type="datetime-local" class="form-control" id="search-start">
+                    <div class="col-md-4">
+                        <label for="search-date-range" class="form-label">Date Range</label>
+                        <input type="text" class="form-control" id="search-date-range" placeholder="Select date range...">
                     </div>
                     <div class="col-md-3">
-                        <label for="search-end" class="form-label">End Time</label>
-                        <input type="datetime-local" class="form-control" id="search-end">
-                    </div>
-                    <div class="col-md-2">
                         <label for="search-customer" class="form-label">Customer</label>
-                        <select id="search-customer" class="form-select">
-                            <option value="">All</option>
+                        <select class="form-select" id="search-customer">
+                            <option value="">All Customers</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label for="search-sku" class="form-label">SKU</label>
-                        <select id="search-sku" class="form-select">
-                            <option value="">All</option>
+                        <select class="form-select" id="search-sku">
+                            <option value="">All SKUs</option>
                         </select>
                     </div>
-                    <div class="col-md-2 align-self-end">
-                        <button type="submit" class="btn btn-primary">Search</button>
-                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                    </div>
+                    <div class="col-md-12">
+                        <button type="reset" class="btn btn-secondary btn-sm">Reset</button>
                     </div>
                 </form>
                 <hr>
@@ -176,6 +175,7 @@ session_start();
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.47/bundles/js/diff2html.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="js/scripts.js"></script>
 <script>
 $(document).ready(function() {
@@ -295,12 +295,34 @@ $(document).ready(function() {
         cardBody.slideToggle(200);
     });
 
+    // Initialize date range picker
+    const dateRangePicker = flatpickr("#search-date-range", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        maxDate: "today",
+        locale: {
+            rangeSeparator: " to "
+        }
+    });
+
     // Search form submission
     $('#search-form').on('submit', function(e) {
         e.preventDefault();
+        
+        const dateRange = $('#search-date-range').val();
+        let startDate = '';
+        let endDate = '';
+        
+        // Parse date range
+        if (dateRange) {
+            const dates = dateRange.split(' to ');
+            startDate = dates[0] || '';
+            endDate = dates[1] || dates[0] || ''; // If only one date, use it for both
+        }
+        
         const searchData = {
-            start: $('#search-start').val(),
-            end: $('#search-end').val(),
+            start: startDate,
+            end: endDate,
             customer: $('#search-customer').val(),
             sku: $('#search-sku').val()
         };
@@ -315,6 +337,13 @@ $(document).ready(function() {
                 logsTable.draw();
             }
         });
+    });
+
+    $('#search-form').on('reset', function() {
+        dateRangePicker.clear();
+        logsTable.clear().draw();
+        selectedFiles.clear();
+        updateBatchDownloadButton();
     });
 
     // SKU badge click - toggle date list
