@@ -7,12 +7,9 @@ body {
 }
 
 /* Main Layout */
-.container {
-}
 
-
-
-h1, h2 {
+h1,
+h2 {
     color: #1f2d3d;
     border-bottom: 1px solid #e0e6ed;
     padding-bottom: 10px;
@@ -28,14 +25,16 @@ h1, h2 {
     padding: 2px 0;
 }
 
-#tree-container .folder-node, #tree-container .file-node {
+#tree-container .folder-node,
+#tree-container .file-node {
     cursor: pointer;
     padding: 6px 8px;
     border-radius: 4px;
     transition: background-color 0.2s ease;
 }
 
-#tree-container .folder-node:hover, #tree-container .file-node:hover {
+#tree-container .folder-node:hover,
+#tree-container .file-node:hover {
     background-color: #e8f0fe;
 }
 
@@ -51,15 +50,15 @@ h1, h2 {
     opacity: 0.8;
 }
 
-#tree-container li > ul {
+#tree-container li>ul {
     display: none;
 }
 
-#tree-container li.open > ul {
+#tree-container li.open>ul {
     display: block;
 }
 
-#tree-container li.open > .folder-node::before {
+#tree-container li.open>.folder-node::before {
     content: '📂';
 }
 
@@ -79,7 +78,7 @@ h1, h2 {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.6);
 }
 
 .modal-content {
@@ -136,19 +135,22 @@ h1, h2 {
     background: #0086a8;
     cursor: pointer;
     transition: background 0.2s ease, transform 0.2s ease;
-    box-shadow: inset 0 -2px rgba(0,0,0,0.12);
+    box-shadow: inset 0 -2px rgba(0, 0, 0, 0.12);
 }
 
-.close:hover, .close:focus {
+.close:hover,
+.close:focus {
     background: #009ec6;
     text-decoration: none;
     color: #fff;
 }
 
 .modal-body {
-    padding: 0; /* Remove padding to allow content to fill */
+    padding: 0;
+    /* Remove padding to allow content to fill */
     flex-grow: 1;
-    overflow-y: hidden; /* Let inner elements control scroll */
+    overflow-y: hidden;
+    /* Let inner elements control scroll */
     display: flex;
     flex-direction: column;
 }
@@ -165,7 +167,8 @@ h1, h2 {
 #log-details {
     font-size: 0.85em;
     color: #555;
-    margin: 0 0 0 auto; /* Push info to the far right */
+    margin: 0 0 0 auto;
+    /* Push info to the far right */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -211,13 +214,15 @@ h1, h2 {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
     font-size: 14px;
     line-height: 1.5;
-    padding: 15px 0; /* Padding top/bottom for space */
+    padding: 15px 0;
+    /* Padding top/bottom for space */
 }
 
 #log-content pre {
     margin: 0;
     padding: 0 25px;
-    white-space: pre-wrap; /* Ensures long lines wrap */
+    white-space: pre-wrap;
+    /* Ensures long lines wrap */
     word-break: break-all;
     color: inherit;
 }
@@ -290,6 +295,26 @@ h1, h2 {
     text-shadow: none;
 }
 
+#markdown-view table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 0.95rem;
+    overflow-x: auto;
+    display: block;
+}
+
+#markdown-view thead {
+    background: #e2e8f0;
+}
+
+#markdown-view th,
+#markdown-view td {
+    border: 1px solid #cbd5f5;
+    padding: 8px 12px;
+    text-align: left;
+}
+
 .markdown-copy-btn {
     position: absolute;
     top: 8px;
@@ -298,7 +323,7 @@ h1, h2 {
     font-size: 12px;
     border-radius: 4px;
     border: 1px solid #94a3b8;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     color: #0f172a;
     cursor: pointer;
     transition: background 0.2s ease;
@@ -343,6 +368,7 @@ h1, h2 {
     display: flex;
     width: 100%;
 }
+
 #log-content .line-number {
     display: inline-block;
     text-align: right;
@@ -351,15 +377,19 @@ h1, h2 {
     color: #888;
     user-select: none;
 }
+
 #log-content .line-content {
     display: inline-block;
     flex-grow: 1;
-    white-space: pre-wrap; /* Wrap long lines */
+    white-space: pre-wrap;
+    /* Wrap long lines */
     word-break: break-all;
     padding-right: 15px;
 }
+
 #log-content .line-content:empty::before {
-    content: " "; /* Render empty lines */
+    content: " ";
+    /* Render empty lines */
 }
 
 
@@ -380,7 +410,7 @@ mark {
 .dark-mode .modal-header {
     background: linear-gradient(135deg, #0f172a, #1f2937);
     color: #e2e8f0;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dark-mode .modal-header h2 {
@@ -388,19 +418,19 @@ mark {
 }
 
 .dark-mode .close {
-    background: rgba(255,255,255,0.12);
+    background: rgba(255, 255, 255, 0.12);
     color: #f8fafc;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .dark-mode .close:hover,
 .dark-mode .close:focus {
-    background: rgba(59,130,246,0.35);
+    background: rgba(59, 130, 246, 0.35);
 }
 
 .dark-mode .controls {
     background: #1f2937;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dark-mode .controls button {
@@ -476,14 +506,28 @@ mark {
     padding: 0;
 }
 
+.dark-mode #markdown-view table {
+    background: #111827;
+    border-color: #374151;
+}
+
+.dark-mode #markdown-view thead {
+    background: #1f2937;
+}
+
+.dark-mode #markdown-view th,
+.dark-mode #markdown-view td {
+    border-color: #374151;
+}
+
 .dark-mode .markdown-copy-btn {
     border-color: #475569;
-    background: rgba(15,23,42,0.8);
+    background: rgba(15, 23, 42, 0.8);
     color: #e2e8f0;
 }
 
 .dark-mode .markdown-copy-btn:hover {
-    background: rgba(15,23,42,0.95);
+    background: rgba(15, 23, 42, 0.95);
 }
 
 .dark-mode #log-content .line-number {
@@ -496,7 +540,7 @@ mark {
 
 .dark-mode .modal-footer {
     background: #111827;
-    border-top: 1px solid rgba(255,255,255,0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dark-mode .modal-footer button {
@@ -513,37 +557,67 @@ mark {
 #group-list .list-group-item {
     cursor: pointer;
 }
+
 .tree {
     list-style: none;
     padding-left: 0;
 }
+
 .tree-node {
     padding-left: 1.5em;
 }
+
 .tree-node .tree-toggler {
     cursor: pointer;
     margin-right: 5px;
 }
+
 .tree-node .tree-toggler::before {
     content: "►";
     display: inline-block;
     transition: transform 0.2s;
 }
-.tree-node.open > .tree-toggler::before {
+
+.tree-node.open>.tree-toggler::before {
     transform: rotate(90deg);
 }
+
 .tree-node ul {
     list-style: none;
     padding-left: 1.5em;
     display: none;
 }
-.tree-node.open > ul {
+
+.tree-node.open>ul {
     display: block;
 }
+
 .tree-leaf a {
     text-decoration: none;
     color: inherit;
 }
+
 .tree-leaf a.active {
     font-weight: bold;
+}
+
+/* Row selection styles */
+#logs-table tbody tr {
+    cursor: pointer;
+}
+
+#logs-table tbody tr.table-active {
+    background-color: #d1e7fd !important;
+}
+
+#logs-table .row-checkbox {
+    cursor: pointer;
+}
+
+#logs-table tbody td {
+    vertical-align: middle;
+}
+
+#batch-download-btn {
+    transition: all 0.3s ease;
 }

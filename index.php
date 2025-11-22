@@ -72,10 +72,18 @@ session_start();
                     </div>
                 </form>
                 <hr>
-                <h4>Logs</h4>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="mb-0">Logs</h4>
+                    <button id="batch-download-btn" class="btn btn-success" style="display: none;">
+                        <i class="bi bi-download"></i> Download Selected (<span id="selected-count">0</span>)
+                    </button>
+                </div>
                 <table id="logs-table" class="table table-striped table-bordered" style="width:100%">
                     <thead>
                         <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="select-all-checkbox" title="Select All">
+                            </th>
                             <th>File Name</th>
                             <th>File Size</th>
                             <th>Modification Time</th>
@@ -159,6 +167,12 @@ $(document).ready(function() {
     const logsTable = $('#logs-table').DataTable({
         data: [],
         columns: [
+            { 
+                data: null,
+                orderable: false,
+                className: 'select-checkbox',
+                defaultContent: '<input type="checkbox" class="row-checkbox">'
+            },
             { data: 'name' },
             { data: 'size' },
             { data: 'modified' },
@@ -232,10 +246,6 @@ $(document).ready(function() {
         });
     });
 
-    $('#search-form').on('reset', function() {
-        logsTable.clear().draw();
-    });
-
     $('#group-tree').on('click', '.tree-toggler', function() {
         $(this).parent('.tree-node').toggleClass('open');
     });
@@ -260,6 +270,113 @@ $(document).ready(function() {
                 logsTable.draw();
             }
         });
+    });
+
+    // Batch selection functionality
+    let selectedFiles = new Set();
+
+    function updateBatchDownloadButton() {
+        const count = selectedFiles.size;
+        $('#selected-count').text(count);
+        if (count > 0) {
+            $('#batch-download-btn').show();
+        } else {
+            $('#batch-download-btn').hide();
+        }
+    }
+
+    // Select all checkbox
+    $('#select-all-checkbox').on('change', function() {
+        const isChecked = $(this).prop('checked');
+        $('#logs-table tbody .row-checkbox').each(function() {
+            $(this).prop('checked', isChecked);
+            const row = $(this).closest('tr');
+            const path = row.find('.btn-preview').data('path');
+            
+            if (isChecked) {
+                selectedFiles.add(path);
+                row.addClass('table-active');
+            } else {
+                selectedFiles.delete(path);
+                row.removeClass('table-active');
+            }
+        });
+        updateBatchDownloadButton();
+    });
+
+    // Individual row checkbox
+    $('#logs-table tbody').on('change', '.row-checkbox', function(e) {
+        e.stopPropagation();
+        const isChecked = $(this).prop('checked');
+        const row = $(this).closest('tr');
+        const path = row.find('.btn-preview').data('path');
+        
+        if (isChecked) {
+            selectedFiles.add(path);
+            row.addClass('table-active');
+        } else {
+            selectedFiles.delete(path);
+            row.removeClass('table-active');
+        }
+        
+        // Update select-all checkbox state
+        const totalCheckboxes = $('#logs-table tbody .row-checkbox').length;
+        const checkedCheckboxes = $('#logs-table tbody .row-checkbox:checked').length;
+        $('#select-all-checkbox').prop('checked', totalCheckboxes === checkedCheckboxes && totalCheckboxes > 0);
+        
+        updateBatchDownloadButton();
+    });
+
+    // Click on row to toggle checkbox
+    $('#logs-table tbody').on('click', 'tr', function(e) {
+        // Don't toggle if clicking on action buttons or checkbox itself
+        if ($(e.target).hasClass('btn-preview') || $(e.target).hasClass('row-checkbox')) {
+            return;
+        }
+        
+        const checkbox = $(this).find('.row-checkbox');
+        checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+    });
+
+    // Batch download button
+    $('#batch-download-btn').on('click', function() {
+        if (selectedFiles.size === 0) {
+            alert('Please select at least one file to download.');
+            return;
+        }
+
+        const paths = Array.from(selectedFiles);
+        
+        if (paths.length === 1) {
+            // Single file - direct download
+            window.location.href = `api/download.php?path=${encodeURIComponent(paths[0])}`;
+        } else {
+            // Multiple files - batch download
+            const form = $('<form>', {
+                method: 'POST',
+                action: 'api/batch_download.php'
+            });
+            
+            paths.forEach(path => {
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'paths[]',
+                    value: path
+                }));
+            });
+            
+            $('body').append(form);
+            form.submit();
+            form.remove();
+        }
+    });
+
+    // Clear selection when table is cleared
+    $('#search-form').on('reset', function() {
+        selectedFiles.clear();
+        $('#select-all-checkbox').prop('checked', false);
+        updateBatchDownloadButton();
+        logsTable.clear().draw();
     });
 
     <?php else: ?>
