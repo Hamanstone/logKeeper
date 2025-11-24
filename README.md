@@ -1,229 +1,188 @@
-# 📘 《Log Explorer Web 系統》開發計畫書
+# 📘 Log Explorer Web 系統
 
-**版本：1.0**
-**撰寫者：ChatGPT**
-**提供給：石頭（產品測試主管）**
-**最後更新：2025/11**
+**版本：2.0**  
+**最後更新：2025/11/24**
 
 ---
 
-# 1. 專案簡介
+## 專案簡介
 
-本專案旨在為工廠測試生產線打造一個統一的「Log Explorer Web 平台」，提供操作人員、PE、TE 快速瀏覽、搜尋及下載產線測試 log。
-系統將整合：
+Log Explorer 是一個現代化的 Web 平台，專為工廠測試生產線打造，提供操作人員、PE、TE 快速瀏覽、搜尋、比對及下載產線測試 log。
 
-* FTP 上傳 log → 事件寫入 Redis Stream → Worker 入庫 MySQL
-* Web UI 即時讀取 MySQL 紀錄
-* 可安全地讓使用者查詢 log，不直接暴露伺服器檔案系統
+### 核心特色
 
----
-
-# 2. 系統架構
-
-## 2.1 前端（Front-end）
-
-* Bootstrap 5
-* jQuery
-* DataTables
-* ECharts（統計圖表）
-* Prism.js（Syntax Highlight）
-* AJAX API（RESTful 風格）
-
-## 2.2 後端（Backend）
-
-* PHP 8（支援 PDO、Slim Framework optional）
-* MySQL（log metadata）
-* Nginx/Apache （提供 Web 端）
-
-## 2.3 檔案儲存
-
-* Log 實體檔案儲存在：
-
-  ```
-  /mnt/raid0/ftp/users/<user>/...
-  ```
-* Web API 透過 `readfile()` 提供下載（經過授權驗證）
+- 🎨 **現代化 UI/UX**：採用 Slate & Indigo 設計系統，支援 Light/Dark Mode
+- 📊 **即時統計圖表**：Dashboard 每 5 秒自動更新，即時掌握 log 數量趨勢
+- 🔍 **強大搜尋功能**：支援日期範圍、客戶、機種多維度篩選
+- 📁 **智慧分組**：自動依客戶/機種/日期三階層結構分類
+- 📝 **Markdown 支援**：自動識別並渲染 `.md` 檔案，支援程式碼高亮
+- 🔄 **檔案比對**：內建 Diff 功能，可同時比對兩個 log 檔案
+- 📦 **批次下載**：支援多檔案選取並打包下載為 ZIP
+- ⚡ **高效能**：大型檔案分段讀取，避免前端卡頓
 
 ---
 
-# 3. 功能需求規格（Functional Requirements）
+## 系統架構
 
-## 3.1 使用者登入驗證
+### 前端技術棧
 
-### 功能描述
+- **UI Framework**: Bootstrap 5
+- **JavaScript**: jQuery
+- **表格**: DataTables
+- **圖表**: ECharts 5
+- **語法高亮**: Prism.js
+- **Markdown**: Marked.js
+- **檔案比對**: Diff2html
+- **日期選擇**: Flatpickr
 
-* 使用者必須登入才能查看或下載 log
-* 權限控制：
+### 後端技術棧
 
-  * **Viewer**：能查詢、預覽、下載
-  * **Admin**：能管理帳號、設定
-
-### 技術細節
-
-* 實作簡單安全登入（PHP session）
-* 密碼使用 bcrypt 儲存（password_hash）
-* API 全部需驗證 Session
-
-### API
-
-```
-POST /api/login.php
-POST /api/logout.php
-GET  /api/session.php
-```
+- **語言**: PHP 8+
+- **資料庫**: MySQL 8.0
+- **Web Server**: Nginx/Apache
+- **檔案儲存**: 本地檔案系統
 
 ---
 
-## 3.2 Log 列表與分組顯示
+## 功能特色
 
-### 功能描述
+### 1. 使用者驗證與權限
 
-* 可依 **客戶 / 機種（SKU） / 日期** 進行快速分組瀏覽
-* 支援三階層結構式 UI
+- ✅ Session 基礎登入系統
+- ✅ 密碼 bcrypt 加密儲存
+- ✅ 全 API 端點驗證保護
+- ✅ 登入頁面支援 Dark Mode
 
-### 分組邏輯
+### 2. Log 管理與瀏覽
 
-透過 pathname 自動解析：
+#### 智慧分組
+- 自動解析路徑結構：`/客戶/機種/日期/檔案`
+- 可折疊式側邊欄分組顯示
+- 支援分組搜尋與快速篩選
 
-```
-/mnt/raid0/ftp/.../PEGA/MU310/20251114/...
-```
+#### 進階搜尋
+- 日期範圍選擇（Flatpickr）
+- 客戶/機種下拉選單
+- 即時搜尋結果更新
 
-即可自動辨識：
+#### 檔案操作
+- **預覽**：Modal 彈窗，支援語法高亮
+- **下載**：單檔下載或批次打包
+- **比對**：選取兩個檔案進行 Diff 比對
+- **複製**：一鍵複製檔案內容
 
-| 屬性 | 範例         |
-| -- | ---------- |
-| 客戶 | PEGA       |
-| 機種 | MU310      |
-| 日期 | 2025-11-14 |
+### 3. Log 預覽功能
 
-### API
+#### 基礎功能
+- 分段讀取（Chunk mode），支援大型檔案
+- 行號顯示/隱藏切換
+- 全文搜尋與高亮
+- 上一檔/下一檔快速切換
+- 鍵盤快捷鍵支援（方向鍵、ESC）
 
-```
-GET /api/groups.php       → 取得所有客戶/機種/日期分類
-GET /api/logs.php         → 查詢特定客戶/機種/日期
-```
+#### Markdown 模式
+- 自動識別 `.md` / `.markdown` 檔案
+- 支援標題、列表、表格、引用、程式碼區塊
+- 程式碼區塊獨立 Copy 按鈕
+- Raw/Markdown 視圖切換
 
----
+#### 檔案資訊
+- 檔案名稱、大小、修改時間
+- 右上角顯示，不干擾內容閱讀
 
-## 3.3 Log 預覽（支援大型檔案 Chunk 讀取 + Syntax Highlight）
+### 4. 批次操作
 
-### 功能描述
+#### 多選功能
+- Checkbox 選取檔案
+- Shift+Click 範圍選取
+- 全選/取消全選
 
-* 不一次載入整個 log（避免大檔造成前端卡死）
-* 用「分段讀取 Chunk」方式載入，例如一次讀 4 KB
-* 支援 Prism.js Syntax Highlight（例如 shell、json、ini）
+#### 右鍵選單
+- Preview（預覽）
+- Download（下載）
+- Batch Download（批次下載，顯示選取數量）
+- Compare Files（比對兩個檔案）
+- 動態顯示/隱藏選項
 
-### 前端 UI 行為
+#### 批次下載
+- 自動打包為 ZIP
+- 保留原始目錄結構
+- 顯示選取檔案數量 Badge
 
-* 使用 Modal 彈出 log 預覽視窗
-* 可選擇「下一頁 / 上一頁」讀取後續 chunk
-* 可完整搜尋 log 字串（前端 JS 自帶）
-* 工具列集中 Copy / Download / 行號切換 / 搜尋輸入框 / 檔案資訊顯示
-* Modal 內建 Light / Dark Mode 切換按鈕
+### 5. 檔案比對
 
-### API
+- 並排顯示兩個檔案差異
+- 語法高亮支援
+- 新增/刪除/修改行標示
+- 行號對齊顯示
 
-```
-GET /api/log_preview.php?path=<file>&offset=0&length=4096
-```
+### 6. Dashboard 統計
 
-回傳：
+#### 即時圖表
+- 每 5 秒自動更新數據
+- 折線圖顯示 log 數量趨勢
+- 平滑曲線與區域填色
+- 響應式設計，自動調整大小
 
-```json
-{
-  "content": "log內容",
-  "next_offset": 4096,
-  "has_more": true
-}
-```
+#### Dark Mode 適配
+- 圖表顏色自動切換
+- 座標軸、網格線、文字顏色適配
+- Tooltip 深色主題
 
----
+### 7. Dark Mode
 
-## 3.4 Log 下載功能
+#### 全域支援
+- 一鍵切換 Light/Dark Mode
+- localStorage 記憶偏好設定
+- 所有頁面同步主題
 
-### 功能描述
+#### 覆蓋範圍
+- ✅ 登入頁面
+- ✅ 主頁面（表格、側邊欄、搜尋）
+- ✅ Dashboard（圖表）
+- ✅ Modal（預覽、比對）
+- ✅ Context Menu
+- ✅ 表單與輸入框
 
-* 使用者可在表格中按「下載」按鈕
-* 檔案由後端安全檢查後輸出
-
-### API
-
-```
-GET /api/download.php?path=<encoded_path>
-```
-
----
-
-## 3.5 ECharts Log 數量統計 Dashboard
-
-### 功能描述
-
-* 可圖形化顯示一天內 log 數量，按時段聚合（例如每 5 分鐘一點）
-* 可選擇：
-
-  * 全部客戶
-  * 特定客戶
-  * 特定機種
-  * 特定日期
-
-### API
-
-```
-GET /api/stats.php?customer=PEGA&sku=MU310&date=2025-11-14
-```
-
-回傳：
-
-```json
-{
-  "labels": ["09:00", "09:05", ...],
-  "values": [32, 28, ...]
-}
-```
+#### 設計細節
+- Slate & Indigo 配色系統
+- 平滑過渡動畫
+- 高對比度確保可讀性
 
 ---
 
-## 3.6 MySQL 時間範圍查詢
+## API 端點
 
-### 功能描述
-
-使用者可輸入：
-
-* 起始時間
-* 結束時間
-* 客戶
-* 機種
-
-系統即從 MySQL 撈出符合條件的 log。
-
-### API
-
+### 認證
 ```
-GET /api/search.php?start=2025-11-14T09:00&end=2025-11-14T11:00&customer=PEGA&sku=MU310
+POST /api/auth/login.php      - 使用者登入
+POST /api/auth/logout.php     - 使用者登出
+GET  /api/auth/session.php    - 檢查 Session 狀態
+```
+
+### Log 管理
+```
+GET  /api/groups.php           - 取得分組資訊（客戶/機種/日期）
+GET  /api/logs.php             - 查詢 log 列表
+GET  /api/search.php           - 進階搜尋（時間範圍、客戶、機種）
+```
+
+### 檔案操作
+```
+GET  /api/log_preview.php      - 預覽 log 內容（支援 chunk）
+GET  /api/download.php         - 下載單一檔案
+POST /api/batch_download.php  - 批次下載（ZIP）
+POST /api/compare.php          - 比對兩個檔案
+```
+
+### 統計
+```
+GET  /api/stats.php            - Dashboard 統計數據
 ```
 
 ---
 
-## 3.7 Markdown 說明檔預覽
-
-### 功能描述
-
-* 副檔名 `.md` / `.markdown` 之檔案會自動以 Markdown 模式開啟，可隨時切換回 Raw 文字。
-* 使用 Marked.js 解析，支援標題、段落、列表、引用、表格與程式碼區塊等元素。
-* 每個程式碼區塊皆會顯示獨立 Copy 按鈕，方便複製 JSON / shell 指令片段。
-* Markdown 視圖同樣提供 Light / Dark Mode，並對表格、程式碼設定專屬版面與顏色。
-
-### 技術細節
-
-* Markdown 與 Raw 模式共用同一個 Modal，因此仍可使用上一檔 / 下一檔、搜尋輸入框等功能。
-* Copy 功能採用 Clipboard API，並保留 `execCommand` 後備方案確保舊版瀏覽器亦可使用。
-
----
-
-# 4. 系統設計細節（System Design Detail）
-
-## 4.1 資料表結構（file_tracking_logs）
+## 資料表結構
 
 ```sql
 CREATE TABLE file_tracking_logs (
@@ -233,102 +192,147 @@ CREATE TABLE file_tracking_logs (
     file_dt INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX(pathname),
-    INDEX(upload_dt)
+    INDEX(upload_dt),
+    INDEX(file_dt)
 );
 ```
 
 ---
 
-## 4.2 後端 API 結構
+## 安裝與部署
 
-```
-/api/
-│
-├── auth/
-│   ├── login.php
-│   ├── logout.php
-│   └── session.php
-│
-├── logs.php
-├── groups.php
-├── search.php
-├── log_preview.php
-├── download.php
-└── stats.php
-```
+### 環境需求
 
----
+- PHP 8.0+
+- MySQL 8.0+
+- Nginx/Apache
+- Composer（可選）
 
-# 5. 前端介面（UI/UX）
+### 安裝步驟
 
-## 5.1 主頁
+1. **Clone 專案**
+   ```bash
+   git clone <repository-url>
+   cd logKeeper
+   ```
 
-* 上方：搜尋框、日期選擇器、客戶/機種 Dropdown
-* 左邊：層級式選單（客戶 → 機種 → 日期）
-* 中間：DataTables（log 列表）
-* 右上：登入/登出
+2. **設定資料庫**
+   ```bash
+   mysql -u root -p < database.sql
+   ```
 
-## 5.2 log 預覽頁
+3. **設定 config.php**
+   ```php
+   define('DB_HOST', 'localhost');
+   define('DB_NAME', 'log_explorer');
+   define('DB_USER', 'your_username');
+   define('DB_PASS', 'your_password');
+   ```
 
-* Modal 彈窗
-* Prism.js highlight
-* Chunk mode
-* Copy / Download / 行號切換 / 搜尋輸入框
-* Light / Dark Mode 切換
-* Markdown 視圖：自動解析 `.md` 檔，程式碼區塊附 Copy 鈕，表格具備專屬樣式
+4. **設定 Web Server**
+   - 將專案目錄設為 document root
+   - 確保 PHP 可讀取 log 檔案目錄
 
-## 5.3 Dashboard（ECharts）
-
-* 折線圖（log count vs time）
-* 客戶/機種切換
-* 日期切換
+5. **初始化資料**
+   ```bash
+   php populate_database.php
+   ```
 
 ---
 
-# 6. 開發時程規劃（Roadmap）
+## 使用說明
 
-| 週數    | 工作項目                       |
-| ----- | -------------------------- |
-| 第 1 週 | 架構設計、資料表確認、API 初版          |
-| 第 2 週 | 登入系統、基本 log 列表 API         |
-| 第 3 週 | 分組 API、DataTables UI、下載功能  |
-| 第 4 週 | Log Chunk 預覽、Prism.js      |
-| 第 5 週 | ECharts Dashboard、後端統計 API |
-| 第 6 週 | MySQL 篩選（日期區間、客戶、機種）       |
-| 第 7 週 | 整合測試、效能優化（index、快取）        |
-| 第 8 週 | 上線 & 系統驗收                  |
+### 登入
+- 預設帳號密碼請參考資料庫設定
+- 支援 Dark Mode 切換
 
----
+### 瀏覽 Log
+1. 使用左側分組選單快速定位
+2. 或使用頂部搜尋功能篩選
+3. 點擊檔案名稱預覽內容
+4. 使用右鍵選單進行批次操作
 
-# 7. 安全性與存取控制
+### 批次下載
+1. 勾選多個檔案
+2. 右鍵點擊任一選取的檔案
+3. 選擇「Batch Download」
+4. 自動下載 ZIP 壓縮檔
 
-* 全 API 必須檢查 session
-* download.php 必須檢查檔案路徑不可跳脫 (`../` 防止 traversal)
-* 建議新增 Nginx 限制：
+### 檔案比對
+1. 勾選兩個檔案
+2. 右鍵選擇「Compare Files」
+3. 查看並排差異比對
 
-  * 只有登入後才能 access `/api`
-* 若未來需要：可整合 LDAP/AD/Keycloak
-
----
-
-# 8. 未來擴充（Future Enhancements）
-
-* Streaming Tail（像 `tail -f`）
-* WebSocket 即時通知有新 log
-* 自動分類（以 ML 辨識 log 類型）
-* 異常 log Alert（email / Line Notify / Teams）
+### Dashboard
+- 訪問 `dashboard.php`
+- 圖表每 5 秒自動更新
+- 支援 Dark Mode
 
 ---
 
-# 9. 總結
+## 安全性
 
-這份開發計畫書完成後，你會得到：
+### 已實現
+- ✅ Session 驗證保護所有 API
+- ✅ 路徑遍歷攻擊防護（`../` 檢查）
+- ✅ 密碼 bcrypt 加密
+- ✅ XSS 防護（輸出轉義）
 
-* 一個現代化 Web Log Explorer
-* 能登入、查詢、分類、預覽、下載
-* 支援大型 log 分段讀取
-* 有圖形化 Dashboard（ECharts）
-* 能以 MySQL 時間範圍進行查詢
-* UI/UX 一致、現代、可維護、可擴充
+### 建議加強
+- [ ] CSRF Token
+- [ ] Rate Limiting
+- [ ] HTTPS 強制
+- [ ] LDAP/AD 整合
 
-整個系統能讓生產線工程師快速定位 log、分類 log、分析 log，大幅提升效率與 traceability。
+---
+
+## 未來規劃
+
+### 短期
+- [ ] 檔案上傳功能
+- [ ] Log 標籤系統
+- [ ] 進階篩選（檔案大小、類型）
+
+### 中期
+- [ ] WebSocket 即時通知
+- [ ] Streaming Tail（`tail -f` 模式）
+- [ ] 使用者權限分級
+
+### 長期
+- [ ] ML 自動分類
+- [ ] 異常 Log Alert（Email/Line/Teams）
+- [ ] 多語言支援
+
+---
+
+## 技術亮點
+
+### UI/UX
+- 現代化設計系統（Slate & Indigo）
+- 完整 Dark Mode 支援
+- 響應式設計
+- 平滑動畫與過渡效果
+
+### 效能優化
+- 大檔案分段讀取
+- DataTables 分頁與虛擬滾動
+- 圖表自動更新節流
+- CSS 變數統一管理
+
+### 開發體驗
+- 模組化 API 設計
+- 一致的錯誤處理
+- 清晰的程式碼結構
+- 完整的註解文件
+
+---
+
+## 授權
+
+本專案為內部使用系統，版權所有。
+
+---
+
+## 聯絡資訊
+
+如有問題或建議，請聯繫開發團隊。
