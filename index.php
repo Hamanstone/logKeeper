@@ -146,29 +146,32 @@ session_start();
         </div>
     </div>
 <?php else: ?>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4">
-                <h1 class="text-center mt-5">Log Explorer</h1>
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title text-center">Login</h5>
-                        <form id="loginForm">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="username" name="username" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Login</button>
-                            </div>
-                            <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
-                        </form>
+    <div class="login-container">
+        <div class="login-theme-toggle">
+            <button class="btn btn-link" id="theme-toggle" title="Toggle Dark Mode">
+                <i class="bi bi-moon-fill"></i>
+            </button>
+        </div>
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Log Explorer</h1>
+                <p class="login-subtitle">Sign in to continue</p>
+            </div>
+            <div class="login-body">
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
                     </div>
-                </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                    <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
+                </form>
             </div>
         </div>
     </div>
