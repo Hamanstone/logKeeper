@@ -347,9 +347,11 @@ h6 {
     /* Remove DataTables shadow if any */
 }
 
-#logs-table tbody tr.table-active {
-    background-color: #e0e7ff !important;
-    /* Indigo 100 */
+#logs-table tbody tr.table-active,
+#logs-table tbody tr.table-active>* {
+    background-color: #c7d2fe !important;
+    /* Indigo 200 */
+    box-shadow: none !important;
 }
 
 /* DataTables Styling Overrides */
@@ -784,8 +786,9 @@ h6 {
     background-color: rgba(79, 70, 229, 0.15) !important;
 }
 
-.dark-mode #logs-table tbody tr.table-active {
-    background-color: rgba(79, 70, 229, 0.25) !important;
+.dark-mode #logs-table tbody tr.table-active,
+.dark-mode #logs-table tbody tr.table-active>* {
+    background-color: rgba(79, 70, 229, 0.35) !important;
 }
 
 
