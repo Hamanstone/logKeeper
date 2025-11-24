@@ -32,6 +32,11 @@ session_start();
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
+                        <button class="btn btn-link nav-link" id="theme-toggle" title="Toggle Dark Mode">
+                            <i class="bi bi-moon-fill"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="api/auth/logout.php">Logout</a>
                     </li>
                 </ul>

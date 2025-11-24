@@ -1,4 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Dark Mode Toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        const themeIcon = themeToggle.querySelector('i');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        // Apply saved theme
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            if (themeIcon) {
+                themeIcon.classList.remove('bi-moon-fill');
+                themeIcon.classList.add('bi-sun-fill');
+            }
+        }
+
+        // Toggle theme on click
+        themeToggle.addEventListener('click', function () {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+
+            if (themeIcon) {
+                if (isDark) {
+                    themeIcon.classList.remove('bi-moon-fill');
+                    themeIcon.classList.add('bi-sun-fill');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('bi-sun-fill');
+                    themeIcon.classList.add('bi-moon-fill');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+        });
+    }
+
     const logPreviewModal = document.getElementById('log-preview-modal');
     const closeModal = document.querySelector('.close');
     const logContentEl = document.getElementById('log-content');
