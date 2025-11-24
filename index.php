@@ -93,9 +93,6 @@ session_start();
                 <!-- Logs Table Section -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="mb-0">Logs</h4>
-                    <button id="batch-download-btn" class="btn btn-success btn-sm" style="display: none;">
-                        <i class="bi bi-download"></i> Download Selected (<span class="count">0</span>)
-                    </button>
                 </div>
                 <div class="table-container">
                     <table id="logs-table" class="table table-hover" style="width:100%">
@@ -349,7 +346,6 @@ $(document).ready(function() {
         dateRangePicker.clear();
         logsTable.clear().draw();
         selectedFiles.clear();
-        updateBatchDownloadButton();
     });
 
     // SKU badge click - toggle date list
@@ -475,15 +471,7 @@ $(document).ready(function() {
     let selectedFiles = new Set();
     let lastCheckedIndex = -1; // Track last checked row for shift-click
 
-    function updateBatchDownloadButton() {
-        const btn = $('#batch-download-btn');
-        if (selectedFiles.size > 0) {
-            btn.find('.count').text(selectedFiles.size);
-            btn.show();
-        } else {
-            btn.hide();
-        }
-    }
+
 
     // Select all checkbox
     $('#select-all-checkbox').on('change', function() {
@@ -502,7 +490,6 @@ $(document).ready(function() {
                 row.removeClass('table-active');
             }
         });
-        updateBatchDownloadButton();
     });
 
     // Individual row checkbox with Shift-click support
@@ -549,7 +536,6 @@ $(document).ready(function() {
             $row.removeClass('table-active');
         }
         
-        updateBatchDownloadButton();
     });
 
     // Click on row to toggle checkbox
@@ -592,8 +578,7 @@ $(document).ready(function() {
         }
     });
 
-    // Batch download button
-    $('#batch-download-btn').on('click', function() {
+    function performBatchDownload() {
         if (selectedFiles.size === 0) {
             alert('Please select at least one file to download.');
             return;
@@ -623,13 +608,12 @@ $(document).ready(function() {
             form.submit();
             form.remove();
         }
-    });
+    }
 
     // Clear selection when table is cleared
     $('#search-form').on('reset', function() {
         selectedFiles.clear();
         $('#select-all-checkbox').prop('checked', false);
-        updateBatchDownloadButton();
         logsTable.clear().draw();
     });
 
@@ -684,18 +668,37 @@ $(document).ready(function() {
         
         // Update batch download menu item state
         const batchDownloadItem = $('#ctx-batch-download');
-        if (selectedFiles.size > 0) {
+        if (selectedFiles.size > 1) {
+            batchDownloadItem.show();
             batchDownloadItem.removeClass('disabled');
+            batchDownloadItem.html(`<i class="bi bi-download"></i> Batch Download <span class="badge-count">${selectedFiles.size}</span>`);
         } else {
-            batchDownloadItem.addClass('disabled');
+            batchDownloadItem.hide();
         }
         
+        // Update compare menu item state (show only when exactly 2 files selected)
         // Update compare menu item state (show only when exactly 2 files selected)
         const compareItem = $('#ctx-compare');
         if (selectedFiles.size === 2) {
             compareItem.show();
         } else {
             compareItem.hide();
+        }
+
+        // Handle separators visibility
+        const separatorBatch = $('#ctx-separator-batch');
+        const separatorCompare = $('#ctx-separator-compare');
+
+        if (batchDownloadItem.is(':visible')) {
+            separatorBatch.show();
+        } else {
+            separatorBatch.hide();
+        }
+
+        if (compareItem.is(':visible')) {
+            separatorCompare.show();
+        } else {
+            separatorCompare.hide();
         }
         
         return false;
@@ -742,19 +745,11 @@ $(document).ready(function() {
         contextMenu.hide();
     });
 
-    $('#ctx-select').on('click', function() {
-        if (contextMenuTargetRow) {
-            const checkbox = contextMenuTargetRow.find('.row-checkbox');
-            if (checkbox.length) {
-                checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
-            }
-        }
-        contextMenu.hide();
-    });
+
 
     $('#ctx-batch-download').on('click', function() {
         if (!$(this).hasClass('disabled')) {
-            $('#batch-download-btn').click();
+            performBatchDownload();
         }
         contextMenu.hide();
     });
@@ -916,14 +911,12 @@ $(document).ready(function() {
         <li id="ctx-download">
             <i class="bi bi-download"></i> Download
         </li>
-        <li class="separator"></li>
-        <li id="ctx-select">
-            <i class="bi bi-check-square"></i> Select/Deselect
-        </li>
+        <li id="ctx-separator-batch" class="separator"></li>
+
         <li id="ctx-batch-download">
             <i class="bi bi-file-earmark-zip"></i> Batch Download Selected
         </li>
-        <li class="separator"></li>
+        <li id="ctx-separator-compare" class="separator"></li>
         <li id="ctx-compare" style="display: none;">
             <i class="bi bi-file-diff"></i> Compare Files
         </li>

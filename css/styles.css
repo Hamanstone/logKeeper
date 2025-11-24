@@ -340,13 +340,16 @@ h6 {
     border-bottom: none;
 }
 
-#logs-table tbody tr:hover {
-    background-color: #f8fafc;
+#logs-table tbody tr:hover,
+#logs-table tbody tr:hover>* {
+    background-color: #eef2ff !important;
+    box-shadow: none !important;
+    /* Remove DataTables shadow if any */
 }
 
 #logs-table tbody tr.table-active {
-    background-color: #eff6ff !important;
-    /* Light blue/indigo tint */
+    background-color: #e0e7ff !important;
+    /* Indigo 100 */
 }
 
 /* DataTables Styling Overrides */
@@ -383,6 +386,9 @@ h6 {
     min-width: 80px;
     background-position: right 0.5rem center;
 }
+
+
+
 
 /* Modals */
 .modal {
@@ -773,6 +779,19 @@ h6 {
     color: #64748b;
 }
 
+.dark-mode #logs-table tbody tr:hover,
+.dark-mode #logs-table tbody tr:hover>* {
+    background-color: rgba(79, 70, 229, 0.15) !important;
+}
+
+.dark-mode #logs-table tbody tr.table-active {
+    background-color: rgba(79, 70, 229, 0.25) !important;
+}
+
+
+
+
+
 /* Diff View Styles */
 .d2h-file-header {
     background-color: #f8fafc !important;
@@ -829,6 +848,16 @@ h6 {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.badge-count {
+    background-color: var(--primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: auto;
 }
 
 .context-menu li.separator {
